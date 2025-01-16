@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <!-- https://publishers.monetag.com/sites/2756321 -->
+    <script src="https://alwingulla.com/88/tag.min.js" data-zone="123959" async data-cfasync="false"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YS1FNNJWXG"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YS1FNNJWXG');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Bot Araçları | Ücretsiz Grid Bot Backtest Aracı</title>
+    <meta name="description" content="Grid bot parametrelerinizi hesaplayın. Grid aralığı, grid seviyeleri ve daha fazlası için araçlar.">
+    <meta name="keywords" content="grid bot araçları, grid aralığı hesaplama, grid seviyeleri, kripto grid bot">
+    <link rel="canonical" href="https://recinilt.com/grid-bot-araclari.html">
+    <link rel="icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style2.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6469332951045288" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6469332951045288">
+    <style>
+        #results-container { 
+            /*margin-top: 20px; */
+            width: 50%;
+        
+        }
+
+        .info-container {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    margin-left: 5px;
+}
+
+.info-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 16px; /* Daha küçük ikon */
+    height: 16px;
+    background-color: #2196f3;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px; /* Daha küçük font boyutu */
+    cursor: pointer;
+    border: 1px solid #bbdefb;
+    transition: background-color 0.3s ease;
+}
+
+.info-icon:hover {
+    background-color: #1976d2;
+    border-color: #64b5f6;
+}
+
+.tooltip {
+    visibility: hidden;
+    width: 200px; /* Daha dar ipucu */
+    background-color: #fff;
+    color: #333;
+    text-align: left;
+    border-radius: 6px; /* Daha az yuvarlak köşeler */
+    padding: 10px; /* Daha az iç boşluk */
+    position: absolute;
+    z-index: 1;
+    bottom: 120%; /* Konumu biraz daha ayarladım */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); /* Daha hafif gölge */
+    border: 1px solid #eee;
+    font-size: 14px; /* İpucu metin boyutu */
+    line-height: 1.3;
+}
+
+.info-container:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-3px); /* Daha az kaydırma */
+}
+
+.tooltip h3 {
+    margin-top: 0;
+    margin-bottom: 5px; /* Daha az boşluk */
+    color: #2196f3;
+    font-size: 16px; /* Başlık boyutu */
+}
+
+.tooltip p {
+    margin-bottom: 5px; /* Daha az boşluk */
+}
+
+.tooltip a {
+    color: #2196f3;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.tooltip a:hover {
+    color: #1976d2;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Anasayfa</a></li>
+                <li><a href="/grid-bot-araclari.html">Grid Bot Araçları</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/hakkimizda.html">Hakkımızda</a></li>
+                <li><a href="/iletisim.html">İletişim</a></li>
+                <li><a href="/gizlilik-politikasi.html">Gizlilik Politikası</a></li>
+            </ul>
+        </nav>
+        <h1>Grid Bot Araçları</h1>
+        <p>Grid bot parametrelerinizi kolayca hesaplayın.</p>
+    </header>
+    <main>
+        <div>
+            <h1>Gridler Arası Yüzde Hesabı</h1>
+            <section id="gridbot-form-section">
+                <form id="gridbot-form">
+                    <label for="division_type">Grid Tipi:</label>
+                    <select name="division_type" id="division_type">
+                        <option value="arithmetic">Aritmetik</option>
+                        <option value="geometric" selected>Geometrik</option>
+                    </select>
+
+                    <label for="start">Alt Seviye:</label>
+                    <input type="number" name="start" id="start" placeholder="Örn: 0.02" step="0.0001" required>
+
+                    <label for="end">Üst Seviye:</label>
+                    <input type="number" name="end" id="end" placeholder="Örn: 0.6" step="0.0001" required>
+
+                    <label for="num_levels">Grid Sayısı (Max: 1000):</label>
+                    <input type="number" name="num_levels" id="num_levels" placeholder="Örn: 200" max="1000" required>
+                </form>
+            </section>
+            <section id="results-section">
+                <h2>Sonuçlar</h2>
+                <div id="results-container">
+                    <div id="grid-arasi-yuzde">Gridler Arası Yüzde:</div>
+                    <div id="grid-seviyeleri"></div>
+                    <div id="grid-adimi"></div>
+                </div>
+            </section>
+        </div>
+
+        <div>
+            <div class="container">
+                <h1>%X Karlı Bileşik Çarpan
+                    <span class="info-container"> 
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">
+                        <h3>Hangisini Seçeyim?</h3>
+                        <p>Yardım için, "Aylık Kârı Anaparaya Yatırarak Yıllık Bileşik Faiz ile Nasıl Kazanılır?" adlı makalemizi okuyunuz.</p>
+                        </span>
+                    </span>
+                </h1>
+        
+                <label for="anaPara">Anapara:</label>
+                <input type="number" id="anaPara" value="100">
+        
+                <label for="kazancOrani">Kazanç Oranı (%):</label>
+                <input type="number" id="kazancOrani" value="5">
+        
+                <label for="kacAdet">Kaç Ay:</label>
+                <input type="number" id="kacAdet" value="12">
+        
+                <label for="aylikKesinti">Aylık Kesinti:</label>
+                <input type="number" id="aylikKesinti" value="0">
+        
+                <div id="sonuc"></div>
+            </div>
+        </div>
+
+    </main>
+    <footer>
+        <p>&copy; 2025 Grid Bot Backtest Aracı. Tüm hakları saklıdır. <a href="mailto:recepyeni@gmail.com">recepyeni@gmail.com</a></p>
+    </footer>
+
+    <script>
+        function geometric_division(start, end, num_levels, type = "geometric") {
+            if (num_levels <= 1) {
+                return [[], [0, 0], 0];
+            }
+
+            let levels = [];
+            let percentages = [];
+            let mystep = 0.0;
+
+            if (type.toLowerCase() === "geometric") {
+                let ratio = Math.pow(end / start, 1 / (num_levels - 1));
+                let current = start;
+
+                for (let i = 0; i < num_levels; i++) {
+                    levels.push(parseFloat(current.toFixed(8)));
+                    current *= ratio;
+                }
+
+                let geometric_percentage = levels.length > 1 ? ((levels[1] - levels[0]) / levels[0]) * 100 : 0;
+                percentages = [parseFloat(geometric_percentage.toFixed(2))];
+            } else if (type.toLowerCase() === "arithmetic") {
+                let step = (end - start) / (num_levels - 1);
+                mystep = step;
+                let current = start;
+
+                for (let i = 0; i < num_levels; i++) {
+                    levels.push(parseFloat(current.toFixed(8)));
+                    current += step;
+                }
+
+                if (levels.length > 1) {
+                    percentages.push(parseFloat(((levels[1] - levels[0]) / levels[0]) * 100).toFixed(2));
+                    percentages.push(parseFloat(((levels[levels.length - 1] - levels[levels.length - 2]) / levels[levels.length - 2]) * 100).toFixed(2));
+                } else {
+                    percentages = [0, 0];
+                }
+            } else {
+                return [[], [0, 0], 0];
+            }
+
+            return [levels, percentages, mystep];
+        }
+
+        function calculateResults() {
+            const startInput = document.getElementById('start');
+            const endInput = document.getElementById('end');
+            const numLevelsInput = document.getElementById('num_levels');
+            const typeSelect = document.getElementById('division_type');
+            const resultsContainer = document.getElementById('results-container');
+            const gridArasiYuzde = document.getElementById('grid-arasi-yuzde');
+            const gridSeviyeleri = document.getElementById('grid-seviyeleri');
+            const gridAdimi = document.getElementById('grid-adimi');
+
+            const start = parseFloat(startInput.value);
+            const end = parseFloat(endInput.value);
+            const num_levels = parseInt(numLevelsInput.value);
+            const type = typeSelect.value;
+
+            if (isNaN(start) || isNaN(end) || isNaN(num_levels) || start >= end || num_levels <= 1) {
+                gridArasiYuzde.textContent = "Lütfen geçerli değerler girin. Grid sayısı 1'den büyük olmalıdır ve alt seviye üst seviyeden küçük olmalıdır.";
+                gridSeviyeleri.textContent = "";
+                gridAdimi.textContent = "";
+                return;
+            }
+
+            try {
+                const [levels, percentages, mystep] = geometric_division(start, end, num_levels, type);
+
+                let percentageText = "";
+                if (type === "geometric") {
+                    percentageText = `Gridler Arası Yüzde: %${percentages[0]}`;
+                } else {
+                    percentageText = `Gridler Arası Yüzde: İlk: %${percentages[0]}, Son: %${percentages[1]}`;
+                }
+                gridArasiYuzde.textContent = percentageText;
+
+                //let levelsText = "Grid Seviyeleri: " + levels.join(", ");
+                //gridSeviyeleri.textContent = levelsText;
+
+                if (type === "arithmetic") {
+                    gridAdimi.textContent = `Grid Adımı: ${mystep.toFixed(8)}`;
+                } else {
+                    gridAdimi.textContent = ""; // Geometrikte adım yok
+                }
+
+            } catch (error) {
+                gridArasiYuzde.textContent = "Bir hata oluştu: " + error.message;
+                gridSeviyeleri.textContent = "";
+                gridAdimi.textContent = "";
+            }
+        }
+
+        const formElements = document.querySelectorAll('#gridbot-form input, #gridbot-form select');
+        formElements.forEach(element => {
+            element.addEventListener('input', calculateResults);
+            element.addEventListener('change', calculateResults);
+        });
+
+        window.addEventListener('load', calculateResults);
+    </script>
+
+<script>
+    function bilesikKarHesapla(anaPara, kazancOrani, kacAdet, aylikKesinti) {
+
+        if (typeof anaPara !== 'number' || typeof kazancOrani !== 'number' || typeof kacAdet !== 'number' || typeof aylikKesinti !== 'number') {
+            return "Lütfen sayısal değerler girin.";
+        }
+
+        if (anaPara < 0 || kazancOrani < 0 || kacAdet < 0 || aylikKesinti < 0) {
+            return "Parametreler 0'dan küçük olamaz.";
+        }
+
+        let aylikKazancOrani = kazancOrani / 100;
+        let toplamPara = anaPara;
+        for (let i = 0; i < kacAdet; i++) {
+            toplamPara = (toplamPara * (1 + aylikKazancOrani)) - aylikKesinti;
+            if(toplamPara < 0)
+            {
+                return "Anapara tükendi.";
+            }
+        }
+        let toplamKazanc = toplamPara;
+        let karYuzdesi = (toplamKazanc / anaPara) * 100;
+        let kacKatKazanc = toplamPara / anaPara;
+
+        return {
+            toplamKazanc: parseFloat(toplamKazanc.toFixed(8)),
+            karYuzdesi: parseFloat(karYuzdesi.toFixed(2)),
+            kacKatKazanc: parseFloat(kacKatKazanc.toFixed(8))
+        };
+    }
+
+    function hesapla() {
+        let anaPara = parseFloat(document.getElementById("anaPara").value) || 0;
+        let kazancOrani = parseFloat(document.getElementById("kazancOrani").value) || 0;
+        let kacAdet = parseFloat(document.getElementById("kacAdet").value) || 0;
+        let aylikKesinti = parseFloat(document.getElementById("aylikKesinti").value) || 0;
+
+        let sonucAlani = document.getElementById("sonuc");
+        let sonuc = bilesikKarHesapla(anaPara, kazancOrani, kacAdet, aylikKesinti);
+
+        if (typeof sonuc === 'string')
+        {
+            sonucAlani.textContent = sonuc;
+        }
+        else
+        {
+            sonucAlani.innerHTML = `
+            Toplam bakiye: ${sonuc.toplamKazanc.toFixed(2)} USDT<br>
+            Kar getirisi: ${(sonuc.toplamKazanc - anaPara).toFixed(2)} USDT<br>
+            Kar yüzdesi: %${(sonuc.karYuzdesi -100).toFixed(2)}<br>
+            Ana parayı kaça katlamış: ${sonuc.kacKatKazanc.toFixed(2)} X
+            `;
+        }
+    }
+
+    // Input alanlarına olay dinleyicileri ekleyerek otomatik hesaplama
+    document.getElementById("anaPara").addEventListener("input", hesapla);
+    document.getElementById("kazancOrani").addEventListener("input", hesapla);
+    document.getElementById("kacAdet").addEventListener("input", hesapla);
+    document.getElementById("aylikKesinti").addEventListener("input", hesapla);
+
+    // Sayfa yüklendiğinde ilk hesaplamayı yap
+    hesapla();
+
+</script>
+
+</body>
+</html>

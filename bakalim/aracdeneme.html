@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bileşik Karlı Çarpan</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="number"] {
+            width: 200px;
+            padding: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        #sonuc {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .container {
+            width: 300px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>%X Karlı Birleşik Çarpan</h1>
+
+        <label for="anaPara">Anapara:</label>
+        <input type="number" id="anaPara" value="100">
+
+        <label for="kazancOrani">Kazanç Oranı (%):</label>
+        <input type="number" id="kazancOrani" value="20">
+
+        <label for="kacAdet">Kaç Ay:</label>
+        <input type="number" id="kacAdet" value="12">
+
+        <label for="aylikKesinti">Aylık Kesinti:</label>
+        <input type="number" id="aylikKesinti" value="0">
+
+        <div id="sonuc"></div>
+    </div>
+    <script>
+        function bilesikKarHesapla(anaPara, kazancOrani, kacAdet, aylikKesinti) {
+
+            if (typeof anaPara !== 'number' || typeof kazancOrani !== 'number' || typeof kacAdet !== 'number' || typeof aylikKesinti !== 'number') {
+                return "Lütfen sayısal değerler girin.";
+            }
+
+            if (anaPara < 0 || kazancOrani < 0 || kacAdet < 0 || aylikKesinti < 0) {
+                return "Parametreler 0'dan küçük olamaz.";
+            }
+
+            let aylikKazancOrani = kazancOrani / 100;
+            let toplamPara = anaPara;
+            for (let i = 0; i < kacAdet; i++) {
+                toplamPara = (toplamPara * (1 + aylikKazancOrani)) - aylikKesinti;
+                if(toplamPara < 0)
+                {
+                    return "Anapara tükendi.";
+                }
+            }
+            let toplamKazanc = toplamPara;
+            let karYuzdesi = (toplamKazanc / anaPara) * 100;
+            let kacKatKazanc = toplamPara / anaPara;
+
+            return {
+                toplamKazanc: parseFloat(toplamKazanc.toFixed(8)),
+                karYuzdesi: parseFloat(karYuzdesi.toFixed(2)),
+                kacKatKazanc: parseFloat(kacKatKazanc.toFixed(8))
+            };
+        }
+
+        function hesapla() {
+            let anaPara = parseFloat(document.getElementById("anaPara").value) || 0;
+            let kazancOrani = parseFloat(document.getElementById("kazancOrani").value) || 0;
+            let kacAdet = parseFloat(document.getElementById("kacAdet").value) || 0;
+            let aylikKesinti = parseFloat(document.getElementById("aylikKesinti").value) || 0;
+
+            let sonucAlani = document.getElementById("sonuc");
+            let sonuc = bilesikKarHesapla(anaPara, kazancOrani, kacAdet, aylikKesinti);
+
+            if (typeof sonuc === 'string')
+            {
+                sonucAlani.textContent = sonuc;
+            }
+            else
+            {
+                sonucAlani.innerHTML = `
+                Toplam bakiye: ${sonuc.toplamKazanc.toFixed(2)} USDT<br>
+                Kar getirisi: ${(sonuc.toplamKazanc - anaPara).toFixed(2)} USDT<br>
+                Kar yüzdesi: %${(sonuc.karYuzdesi -100).toFixed(2)}<br>
+                Ana parayı kaça katlamış: ${sonuc.kacKatKazanc.toFixed(2)} X
+                `;
+            }
+        }
+
+        // Input alanlarına olay dinleyicileri ekleyerek otomatik hesaplama
+        document.getElementById("anaPara").addEventListener("input", hesapla);
+        document.getElementById("kazancOrani").addEventListener("input", hesapla);
+        document.getElementById("kacAdet").addEventListener("input", hesapla);
+        document.getElementById("aylikKesinti").addEventListener("input", hesapla);
+
+        // Sayfa yüklendiğinde ilk hesaplamayı yap
+        hesapla();
+
+    </script>
+</body>
+</html>
