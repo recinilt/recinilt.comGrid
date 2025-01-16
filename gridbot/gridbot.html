@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <!-- <script src="myscript.js"></script> -->
+
+    <script>
+
+function mybacktest(symbolg, startg, endg, num_levelsg, comissiong, girilenilkbakiyeg, veriintervalg, start_dateg, end_dateg) {
+    let symbol, mymyq, carpim, alinacaklar, satilacaklar, old_alinacaklar, old_satilacaklar, ilkbakiye, new_alinacaklar, new_satilacaklar, fazlalikalinacaklar, fazlaliksatilacaklar;
+
+    if (symbolg.toUpperCase().includes("USDT")) {
+        symbol = symbolg.toUpperCase();
+    } else {
+        symbol = symbolg.toUpperCase() + "USDT";
+    }
+    let start = parseFloat(startg.toString().replace(",", "."));
+    let end = parseFloat(endg.toString().replace(",", "."));
+    let num_levels = parseInt(num_levelsg);
+    let comission = parseFloat(comissiong.toString().replace(",", "."));
+    let girilenilkbakiye = parseFloat(girilenilkbakiyeg.toString().replace(",", "."));
+    let veriinterval = veriintervalg.toLowerCase();
+    let start_date = start_dateg;
+    let end_date = end_dateg;
+
+    let current_price;
+    console.log("Backtest çalışmaya başladı");
+    girdiler();
+    current_price = get_coin_price(symbol);
+    [alinacaklar, satilacaklar] = split_levels(levels, data_first_close);
+    old_alinacaklar = alinacaklar.slice();
+    old_satilacaklar = satilacaklar.slice();
+    new_alinacaklar = alinacaklar.slice();
+    new_satilacaklar = satilacaklar.slice();
+
+    console.log("Precision bilgileri:", minmiktarondalik);
+    mymyq = 5.5 / start;
+    carpim = 1;
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+    mymyq = Math.ceil(mymyq * carpim) / carpim;
+
+    ilkbakiye = ilkbakiyehesapla();
+    console.log("minimum gerekli toplam usdt:", ilkbakiye);
+    console.log("Gridler arası yüdelik değişim: ", geometric_percentage);
+
+    fazlalikalinacaklar = find_excess_items(old_alinacaklar, new_alinacaklar);
+    fazlaliksatilacaklar = find_excess_items(old_satilacaklar, new_satilacaklar);
+
+    ilkgiris();
+    return process_close_values(data);
+}
+
+const requests = require('requests');
+const { Client } = require('binance-api-node');
+const { SIDE_SELL, ORDER_TYPE_LIMIT, TIME_IN_FORCE_GTC } = require('binance-api-node/dist/enums');
+const { tqdm } = require('tqdm');
+const { Decimal } = require('decimal.js');
+const { DateTime } = require('luxon');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const apiKey = process.env.API_KEY;
+const apiSecret = process.env.API_SECRET;
+
+const client = new Client({
+  apiKey,
+  apiSecret,
+});
+
+let levels = [];
+const geometricPercentage = 1.1;
+
+let symbol = '';
+let start = 1.1;
+let end = 1.1;
+let numLevels = 1;
+let commission = 1.1;
+let minMiktarOndalik = 1;
+let myTickSize = 1;
+let precisionInfo = {};
+let dataFirstClose = 0.032;
+let veriInterval = '1m';
+let veriDaysBack = 3;
+let data = [];
+let girilenIlkBakiye = 0;
+let myMyq = 0.0;
+let carpim = 1;
+let oldAlinacaklar = [];
+let oldSatilacaklar = [];
+let startDate = '2024-04-17';
+let endDate = '2024-07-27';
+
+const soracaklarim = [
+  "Bu bir telegram botu mesajıdır. Grid bactestine baştan başlıyoruz. Grid botu, verdiğiniz tarih aralıklarında spot grid bot yapsanız, kaç dolar elde ederdiniz, bunu öğreneceksiniz. Lütfen, parantez içlerindeki örnek formatında giriniz. istediğiniz zaman başlat yazarak soruları baştan başlatabilirsiniz. \nCoin Çiftini Giriniz (Örn:     ONEUSDT      ): ",
+  "Alt seviyeyi giriniz (Örn: 0.02):",
+  "Üst seviyeyi giriniz (Örn: 0.6):",
+  "Grid sayısını giriniz (alt üst sınır arası kaça bölünsün?) (Binance limit=max 200) (Örn: 200):",
+  "Komisyon yüzdesi (Örn: 0.1 (yani binde bir) (sadece sayı giriniz, yüzde işareti girmeyiniz)):",
+  "Başlangıç sermayesi kaç USDT olsun (Örn. 1000):",
+  "Zaman dilimi ne olsun? (1 dakikalıklarda kontrol etmek için 1m yazınız) (Örn.: 1m, 5m, 1h, 1d):",
+  "Botun çalışma başlangıç tarihini yıl tire ay tire gün şeklinde yazınız (Örn. 2024-01-17):",
+  "Botun çalışma bitiş tarihini yıl tire ay tire gün şeklinde yazınız (Örn. 2024-12-27):\n(bu soruyu cevapladıktan sonra lütfen işlemin bitmesini bekleyiniz, cevabınız gelecek. 365 günlük veri işlenmesi yaklaşık 20 dakika sürer...)",
+];
+
+function girdiler() {
+
+
+    symbol = prompt("Coin Çiftini Giriniz (Örn: BTCUSDT): ").toUpperCase();
+    start = parseFloat(prompt("Alt seviyeyi giriniz (Örn: 0.02): "));
+    end = parseFloat(prompt("Üst seviyeyi giriniz (Örn: 0.6): "));
+    num_levels = parseInt(prompt("Grid sayısını giriniz (Binance limit=max 200) (Örn: 200): "));
+    comission = parseFloat(prompt("Komisyon (Örn: %0.1 (yani binde bir)): ")) / 100;
+    girilenilkbakiye = parseInt(prompt("Başlangıç sermayesi kaç USDT olsun (öRN 1000): "));
+    veriinterval = prompt("Enter the interval (e.g., 1m, 5m, 1h, 1d): ").trim().toLowerCase();
+    veri_days_back = parseInt(prompt("Enter the number of days back to fetch (e.g. 3): "));
+
+    data = vericekis(veriinterval, start_date, end_date);
+    data_first_close = parseFloat(data[0][4]);
+
+    [minmiktarondalik, myticksize, precision_info] = get_precision(symbol);
+    [levels, geometric_percentage] = geometric_division(start, end, num_levels);
+}
+
+function get_coin_price(symbol) {
+    const url = "https://api.binance.com/api/v3/ticker/price";
+    const params = { symbol: symbol.toUpperCase() };
+
+    try {
+        const response = fetch(url, { params })
+            .then(response => response.json())
+            .then(data => parseFloat(data.price));
+        return response;
+    } catch (e) {
+        console.error(`Hata: ${e}`);
+        return null;
+    }
+}
+
+function countDecimalPlaces(number) {
+    const decimalNumber = Decimal(number.toString()).normalize();
+    if (decimalNumber.toString().includes('.')) {
+        return Math.abs(decimalNumber.exponent);
+    }
+    return 0;
+}
+
+function getPrecision(symbol) {
+    try {
+        const exchangeInfo = client.getExchangeInfo();
+        for (const s of exchangeInfo.symbols) {
+            if (s.symbol === symbol) {
+                const precisionInfo = {
+                    baseAssetPrecision: s.baseAssetPrecision,
+                    quoteAssetPrecision: s.quoteAssetPrecision,
+                    stepSize: null,
+                    tickSize: null
+                };
+                for (const filt of s.filters) {
+                    if (filt.filterType === 'LOT_SIZE') {
+                        precisionInfo.stepSize = filt.stepSize;
+                    }
+                    if (filt.filterType === 'PRICE_FILTER') {
+                        precisionInfo.tickSize = filt.tickSize;
+                    }
+                }
+                const minmiktarondalik = countDecimalPlaces(precisionInfo.stepSize);
+                const myticksize = countDecimalPlaces(precisionInfo.tickSize);
+                return [minmiktarondalik, myticksize, precisionInfo];
+            }
+        }
+        console.log(`${symbol} pair not found.`);
+        return null;
+    } catch (e) {
+        console.log('Error occurred:', e);
+        return null;
+    }
+}
+
+function geometricDivision(start, end, numLevels) {
+    if (numLevels <= 1) {
+        throw new Error("Number of levels must be greater than 1.");
+    }
+
+    const levels = [];
+    const ratio = Math.pow(end / start, 1 / (numLevels - 1));
+    let current = start;
+
+    for (let i = 0; i < numLevels; i++) {
+        levels.push(Number(current.toFixed(8)));
+        current *= ratio;
+    }
+
+    const geometricPercentage = levels.length > 1 ? ((levels[1] - levels[0]) / levels[0]) * 100 : 0;
+    return [levels, Number(geometricPercentage.toFixed(2))];
+}
+
+function collectData(symbol, interval, startDate, endDate) {
+    const startTime = new Date(startDate).getTime();
+    const endTime = new Date(endDate).getTime();
+
+    console.log(`Fetching data for ${symbol} from ${startDate} to ${endDate} with interval ${interval}...`);
+    const allData = [];
+    let currentStartTime = startTime;
+
+    const totalSteps = Math.ceil((endTime - startTime) / (24 * 60 * 60 * 1000)) + 1;
+    for (let i = 0; i < totalSteps; i++) {
+        const currentEndTime = Math.min(currentStartTime + (24 * 60 * 60 * 1000), endTime);
+        try {
+            const klines = fetchBinanceKlines(symbol, interval, currentStartTime, currentEndTime);
+            for (const kline of klines) {
+                const timestamp = new Date(kline[0]).toISOString();
+                const openPrice = kline[1];
+                const highPrice = kline[2];
+                const lowPrice = kline[3];
+                const closePrice = kline[4];
+                const volume = kline[5];
+                allData.push([timestamp, openPrice, highPrice, lowPrice, closePrice, volume]);
+            }
+            currentStartTime = klines[klines.length - 1][6] * 1000;
+        } catch (e) {
+            console.error(`Error fetching data: ${e}`);
+            break;
+        }
+    }
+
+    return allData;
+}
+
+
+function vericekis(veriinterval, start_date, end_date) {
+    const symbol = 'BTCUSDT'; // Global symbol variable
+    return fetchBinanceKlines(symbol, veriinterval, new Date(start_date), new Date(end_date));
+}
+
+function fetchBinanceKlines(symbol, interval, startTime, endTime) {
+    const url = 'https://api.binance.com/api/v3/klines';
+    const params = {
+        symbol: symbol,
+        interval: interval,
+        startTime: Math.floor(startTime.getTime() * 1000),
+        endTime: Math.floor(endTime.getTime() * 1000),
+        limit: 1000
+    };
+
+    return fetch(url, { params })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error(`Error fetching data from Binance: ${response.status} ${response.statusText}`);
+            }
+        });
+}
+
+
+let alinacaklar = [];
+let satilacaklar = [];
+let oncekialinacaklar = [];
+let oncekisatilacaklar = [];
+let oncekialinacaklevelsonprice = 1000000;
+let oncekisatilacaklevelilkprice = 1000000;
+
+function split_levels(levels, myclose, high = null, low = null) {
+    if (true) {
+        /*
+        Levels listesini ikiye böler: close'dan düşük olanlar ve yüksek olanlar.
+        
+        Args:
+            levels (list): Geometrik seviyelerin bir listesi.
+            close (float): Close değeri, seviyelere göre listeyi böler.
+        
+        Returns:
+            tuple: (alinacaklar, satilacaklar) listeleri.
+        */
+        
+        if (!levels || levels.length === 0) {
+            console.log("Hata: 'levels' listesi boş!");
+            return [[], []];
+        }
+
+        if (low !== null && high !== null) {
+            if (high < levels[0]) {
+                alinacaklar = [];
+                satilacaklar = [...levels];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                return [alinacaklar, satilacaklar];
+            } else if (low > levels[levels.length - 1]) {
+                alinacaklar = [...levels];
+                satilacaklar = [];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                return [alinacaklar, satilacaklar];
+            }
+        } else {
+            if (myclose < levels[0]) {
+                alinacaklar = [];
+                satilacaklar = [...levels];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                return [alinacaklar, satilacaklar];
+            } else if (myclose > levels[levels.length - 1]) {
+                alinacaklar = [...levels];
+                satilacaklar = [];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                return [alinacaklar, satilacaklar];
+            }
+        }
+
+        if (oncekisatilacaklevelilkprice === 1000000) {
+            const closest_level = levels.reduce((prev, curr) => 
+                Math.abs(curr - myclose) < Math.abs(prev - myclose) ? curr : prev
+            );
+            let gecicilevels = [...levels];
+            gecicilevels = gecicilevels.filter(x => x !== closest_level);
+            satilacaklar = gecicilevels.filter(level => level > myclose);
+            alinacaklar = gecicilevels.filter(level => level < myclose);
+            oncekisatilacaklar = [...satilacaklar];
+            oncekialinacaklar = [...alinacaklar];
+            oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+            oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+        }
+
+        if (low !== null && high !== null) {
+            if (low > oncekialinacaklevelsonprice && high < oncekisatilacaklevelilkprice) {
+                return [oncekialinacaklar, oncekisatilacaklar];
+            } else if (low < oncekialinacaklevelsonprice) {
+                const closest_level = levels.reduce((prev, curr) => 
+                    Math.abs(curr - low) < Math.abs(prev - low) ? curr : prev
+                );
+                let gecicilevels = [...levels];
+                gecicilevels = gecicilevels.filter(x => x !== closest_level);
+                satilacaklar = gecicilevels.filter(level => level > low);
+                alinacaklar = gecicilevels.filter(level => level < low);
+                oncekisatilacaklar = [...satilacaklar];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                oncekialinacaklar = [...alinacaklar];
+                return [alinacaklar, satilacaklar];
+            } else if (high > oncekisatilacaklevelilkprice) {
+                const closest_level = levels.reduce((prev, curr) => 
+                    Math.abs(curr - high) < Math.abs(prev - high) ? curr : prev
+                );
+                let gecicilevels = [...levels];
+                gecicilevels = gecicilevels.filter(x => x !== closest_level);
+                satilacaklar = gecicilevels.filter(level => level > high);
+                alinacaklar = gecicilevels.filter(level => level < high);
+                oncekisatilacaklar = [...satilacaklar];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                oncekialinacaklar = [...alinacaklar];
+                return [alinacaklar, satilacaklar];
+            } else {
+                const closest_level = levels.reduce((prev, curr) => 
+                    Math.abs(curr - myclose) < Math.abs(prev - myclose) ? curr : prev
+                );
+                let gecicilevels = [...levels];
+                gecicilevels = gecicilevels.filter(x => x !== closest_level);
+                satilacaklar = gecicilevels.filter(level => level > myclose);
+                alinacaklar = gecicilevels.filter(level => level < myclose);
+                oncekisatilacaklar = [...satilacaklar];
+                oncekialinacaklar = [...alinacaklar];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                return [alinacaklar, satilacaklar];
+            }
+        } else {
+            if (myclose > oncekialinacaklevelsonprice && myclose < oncekisatilacaklevelilkprice) {
+                return [oncekialinacaklar, oncekisatilacaklar];
+            } else {
+                const closest_level = levels.reduce((prev, curr) => 
+                    Math.abs(curr - myclose) < Math.abs(prev - myclose) ? curr : prev
+                );
+                let gecicilevels = [...levels];
+                gecicilevels = gecicilevels.filter(x => x !== closest_level);
+                satilacaklar = gecicilevels.filter(level => level > myclose);
+                alinacaklar = gecicilevels.filter(level => level < myclose);
+                oncekisatilacaklar = [...satilacaklar];
+                oncekialinacaklar = [...alinacaklar];
+                oncekisatilacaklevelilkprice = satilacaklar.length ? satilacaklar[0] : levels[levels.length - 1];
+                oncekialinacaklevelsonprice = alinacaklar.length ? alinacaklar[alinacaklar.length - 1] : levels[0];
+                return [alinacaklar, satilacaklar];
+            }
+        }
+    }
+}
+
+
+function ilkbakiyehesapla() {
+    let q1 = 5.5 / start;
+    let carpim = 1;
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+    q1 = Math.ceil(q1 * carpim) / carpim; // hep aynı quantity de alınacak.
+    let gereklialtusdt = 0.0;
+    
+    for (let level of old_alinacaklar) {
+        gereklialtusdt += Math.ceil((level * q1) * carpim) / carpim;
+    }
+    let gerekliustusdt = (Math.ceil((current_price * q1) * carpim) / carpim) * old_satilacaklar.length;
+    return (gereklialtusdt + gerekliustusdt);
+}
+
+function sonbakiyehesapla(sonclose, sonalinacaklar, sonsatilacaklar) {
+    let q1 = 5.5 / start;
+    let carpim = 1;
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+    q1 = Math.ceil(q1 * carpim) / carpim; // hep aynı quantity de alınacak.
+    let gereklialtusdt = 0.0;
+    
+    for (let level of sonalinacaklar) {
+        gereklialtusdt += Math.ceil((level * q1) * carpim) / carpim;
+    }
+    let gerekliustusdt = (Math.ceil((sonclose * q1) * carpim) / carpim) * sonsatilacaklar.length;
+    return (gereklialtusdt + gerekliustusdt);
+}
+
+function findExcessItems(oldList, newList) {
+    // Yeni alinacaklar listesindeki, eski alinacaklar listesine göre fazla olan elemanları döndürür.
+    
+    // Yeni listede olup eski listede olmayan elemanları bul
+    const excessItems = newList.filter(item => !oldList.includes(item));
+    return excessItems;
+}
+
+function getCoinData(symbol) {
+    // Coin çiftinin fiyat, high ve low değerlerini döndürür.
+    const url = `https://api.binance.com/api/v3/ticker/24hr`;
+    const params = { symbol: symbol.toUpperCase() };
+    
+    return fetch(url, { params })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Hata: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const price = parseFloat(data.lastPrice);
+            const high = parseFloat(data.highPrice);
+            const low = parseFloat(data.lowPrice);
+            return [price, high, low];
+        })
+        .catch(error => {
+            console.error(`Hata: ${error.message}`);
+            return null;
+        });
+}
+
+function ilkgiris() {
+    let carpim = 1;
+    let alinacaklar, satilacaklar;
+    [alinacaklar, satilacaklar] = split_levels(levels, data_first_close);
+    let new_alinacaklar = [...alinacaklar];
+    let new_satilacaklar = [...satilacaklar];
+
+    if (new_alinacaklar.length > 0) {
+        for (let orderprice of new_alinacaklar) {
+            //place_buy_order(symbol, orderprice, mymyq)
+            console.log("aşağıya al emri konuldu", orderprice);
+        }
+    }
+
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim = carpim * 10;
+    }
+    let alinacakcoin = Math.ceil(0.00000000000001 * carpim) / carpim;
+
+    if (new_satilacaklar.length > 0) {
+        for (let orderprice of new_satilacaklar) {
+            let quantity = mymyq;
+            //quantity = Math.ceil(quantity * carpim) / carpim;
+            alinacakcoin = alinacakcoin + quantity;
+            //place_sell_order(symbol, orderprice, mymyq)
+            console.log("yukarıya sat emri konuldu", orderprice, quantity);
+        }
+    }
+    alinacakcoin = Math.ceil(alinacakcoin * carpim) / carpim;
+    //place_market_buy_order(symbol, alinacakcoin)
+    console.log("şu kadar başlangıç için coin alındı: ", alinacakcoin);
+}
+
+function create_and_write_txt(fileName, content) {
+    /**
+     * Belirtilen isimle bir txt dosyası oluşturur ve içine belirtilen içeriği yazar.
+     *
+     * @param {string} fileName - Dosya adı (uzantı .txt ile bitmeli)
+     * @param {string} content - Dosyaya yazılacak içerik
+     */
+    if (!fileName.endsWith('.txt')) {
+        fileName += '.txt';
+    }
+
+    try {
+        const fs = require('fs');
+        fs.writeFileSync(fileName, content, 'utf8');
+        console.log(`'${fileName}' dosyası başarıyla oluşturuldu ve içerik yazıldı.`);
+    } catch (e) {
+        console.log(`Hata oluştu: ${e}`);
+    }
+}
+
+
+function readApiKey(file) {
+    try {
+        // Using vanilla JavaScript FileReader API
+        const fileContent = new FileReader();
+        const text = fileContent.readAsText(file); // "akey.txt"
+        return text.trim(); // Returns the text from the file
+    } catch (error) {
+        return null; // Returns null if file doesn't exist
+    }
+}
+
+// Usage
+//const apiKey = readApiKey();
+//if (apiKey) {
+//    console.log(`API Key: ${apiKey}`);
+//} else {
+//    console.log("api_key.txt file not found or couldn't be read.");
+//}
+
+function checkApiKeyFile() {
+    // Checks for api_key.txt file in working directory
+    try {
+        const myapi = new FileReader().readAsText("a.txt") !== null;
+        const mysecret = new FileReader().readAsText("s.txt") !== null;
+        return (myapi && mysecret);
+    } catch (error) {
+        return false;
+    }
+}
+
+// Usage
+//if (checkApiKeyFile()) {
+//    console.log("api_key.txt file found.");
+//} else {
+//    console.log("api_key.txt file not found.");
+//}
+
+function getCurrentDateTimeText() {
+    /**
+     * Returns the current time as text including year, month, day, hour, minute and second.
+     * 
+     * Returns:
+     *     string: Time information containing year, month, day, hour, minute and second.
+     */
+    const now = new Date();
+    return now.toISOString().slice(0,19).replace(/[T]/g, '-').replace(/[:]/g, '-');
+}
+
+// Usage
+//const currentTimeText = getCurrentDateTimeText();
+//console.log(currentTimeText);
+
+const gridprofit = 0.0000001;
+
+function calculateTotalProfit(lastPrice, percentageIncrease, commissionRate, lotCount) {
+    /*
+    Function that calculates total profit.
+
+    Parameters:
+    - lastPrice: Final price of the transaction.
+    - percentageIncrease: Percentage increase from initial price to final price (e.g., 1 for 1%).
+    - commissionRate: Commission rate (e.g., 0.003 for 0.3%).
+    - lotCount: Total number of lots traded.
+
+    Return:
+    - totalProfit: Total profit obtained from the transaction.
+    */
+
+    // Calculate initial price
+    const initialPrice = lastPrice / (1 + percentageIncrease);
+
+    // Calculate profit per unit
+    const profitPerUnit = (lastPrice - initialPrice) - (lastPrice * commissionRate);
+
+    // Calculate total profit
+    const totalProfit = profitPerUnit * lotCount;
+
+    return totalProfit;
+}
+
+//const lastPrice = 123;
+//const percentageIncrease = 0.01;  // 1% increase
+//const commissionRate = 0.003;     // 0.3% commission
+//const lotCount = 14;
+
+//const profit = calculateTotalProfit(lastPrice, percentageIncrease, commissionRate, lotCount);
+//console.log(`Total profit: ${profit.toFixed(2)}`);
+
+
+function ilkveonbakiyehesapla() {
+    let mymyilkprice = parseFloat(data[0][4]);
+    let mymyilkhigh = parseFloat(data[0][2]);
+    let mymyilklow = parseFloat(data[0][3]);
+    let mymysonprice = parseFloat(data[data.length - 1][4]);
+    let mymysonhigh = parseFloat(data[data.length - 1][2]);
+    let mymysonlow = parseFloat(data[data.length - 1][3]);
+    
+    let [levels, geometric_percentage] = geometric_division(start, end, num_levels);
+    let mymyilkbakiye = 0.0;
+    let suankibakiye = 0.0;
+    
+    try {
+        let [ilk_alinacaklar, ilk_satilacaklar] = split_levels(levels, mymyilkprice, mymyilkhigh, mymyilklow);
+        let [son_alinacaklar, son_satilacaklar] = split_levels(levels, mymysonprice, mymysonhigh, mymysonlow);
+    } catch(error) {
+        console.log("sorun çıktı1");
+    }
+    
+    try {
+        mymyilkbakiye = sonbakiyehesapla(mymyilkprice, ilk_alinacaklar, ilk_satilacaklar);
+        suankibakiye = sonbakiyehesapla(mymysonprice, son_alinacaklar, son_satilacaklar);
+    } catch(error) {
+        console.log("sorun çıktı2");
+    }
+    
+    return [mymyilkbakiye, suankibakiye];
+}
+
+function calculate_days_between(start_date, end_date) {
+    /**
+     * Calculates the number of days between two dates.
+     *
+     * @param {string} start_date - The start date in 'YYYY-MM-DD' format.
+     * @param {string} end_date - The end date in 'YYYY-MM-DD' format.
+     * @returns {number|null} The number of days between the two dates.
+     */
+    try {
+        let start = new Date(start_date);
+        let end = new Date(end_date);
+        
+        if (start > end) {
+            throw new Error("Start date must be earlier than end date.");
+        }
+
+        let difference = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+        return difference;
+    } catch(error) {
+        console.log(`Error: ${error.message}`);
+        return null;
+    }
+}
+
+function processCloseValues(data) {
+    let oldSatilacaklar;
+    let oldAlinacaklar;
+    let gridprofit;
+    let veriDaysBack;
+    let levels;
+
+    /**
+     * Processes 'close', 'high', and 'low' values from the given data list.
+     * 
+     * @param {Array} data - Data received from Binance API.
+     * @returns {string|null} Statistics information or null if error occurs
+     */
+    try {
+        // Check if required columns exist
+        if (data.length > 0) {
+            let sonkapanis = 0;
+            let satimsayisi = 0;
+            
+            for (let row of data) {
+                let closeValue = parseFloat(row[4]);
+                let highValue = parseFloat(row[2]);
+                let lowValue = parseFloat(row[3]);
+
+                if (closeValue > start && closeValue < end) {
+                    let newAlinacaklar, newSatilacaklar;
+                    try {
+                        [newAlinacaklar, newSatilacaklar] = splitLevels(levels, closeValue, highValue, lowValue);
+                    } catch (e) {
+                        console.log(`Hata: ${e}`);
+                        newAlinacaklar = [...oldAlinacaklar];
+                        newSatilacaklar = [...oldSatilacaklar];
+                        continue;
+                    }
+
+                    let fazlalikalinacaklar = findExcessItems(oldAlinacaklar, newAlinacaklar);
+                    let fazlaliksatilacaklar = findExcessItems(oldSatilacaklar, newSatilacaklar);
+                    oldAlinacaklar = [...newAlinacaklar];
+                    oldSatilacaklar = [...newSatilacaklar];
+
+                    if (fazlalikalinacaklar.length) {
+                        satimsayisi += fazlalikalinacaklar.length;
+                        for (let price of fazlalikalinacaklar) {
+                            gridprofit += toplamKarHesapla(price, (geometricPercentage * 0.01), (comission * 0.01), mymyq);
+                        }
+                    }
+
+                sonkapanis = closeValue;
+            }
+
+            // Result calculations
+            let myqs = oldSatilacaklar.reduce((sum, q) => 
+                sum + Math.ceil(5.5 / q * (10 ** minmiktarondalik)) / (10 ** minmiktarondalik), 0);
+            let mysatilacakq = mymyq * oldSatilacaklar.length;
+            let alinacaklartoplamusdt = oldAlinacaklar.reduce((sum, alinacakusdt) => 
+                sum + alinacakusdt * mymyq, 0);
+            let satilacaklartoplamusdt = sonkapanis * mysatilacakq;
+
+            let [yavilkbakiyeiste, yavsonbakiyeiste] = ilkveonbakiyehesapla();
+            let kazancorani = (yavsonbakiyeiste + gridprofit) / yavilkbakiyeiste;
+            let girilenboluminbakiye = Math.round((girilenilkbakiye/yavilkbakiyeiste) * 100) / 100;
+
+            let istatistik = `
+            Sembol: ${symbol}
+            Alt sınır: ${start} USDT
+            Üst sınır: ${end} USDT
+            Grid Sayısı: ${numLevels}
+            Komisyon: %${comission}
+            Bot başlangıç tarihi: ${startDate}
+            Bot bitiş tarihi: ${endDate}
+            Kaç gündür bot çalışıyor: ${calculateDaysBetween(startDate, endDate)} gün
+            Gridler arası yüzde: %${geometricPercentage}
+            Binance'ta açmak için gerekli min. bakiye: ${yavilkbakiyeiste} USDT
+            Başlangıç bakiyesi: ${girilenilkbakiye} USDT
+            Tamamlanmış işlem sayısı: ${satimsayisi}
+            Gridden elde edilen realized USDT: ${Math.round(gridprofit * girilenboluminbakiye * 100) / 100} USDT
+            Gridden yüzde kazanç ((Grid kazancı bölü ilk bakiye) * 100): %${Math.round((gridprofit / yavilkbakiyeiste) * 10000) / 100}
+            Grid'den aylık yüzde kazanç: %${Math.round(30 * ((gridprofit / yavilkbakiyeiste) * 100) / calculateDaysBetween(startDate, endDate) * 100) / 100}
+            Grid'den yıllık yüzde kazanç: %${12 * Math.round(30 * ((gridprofit / yavilkbakiyeiste) * 100) / calculateDaysBetween(startDate, endDate) * 100) / 100}
+            Şuanki gridden gelen hariç bakiye: ${Math.round(yavsonbakiyeiste * girilenboluminbakiye * 100) / 100} USDT
+            Şuanki grid dahil bakiye: ${Math.round((yavsonbakiyeiste + gridprofit) * girilenboluminbakiye * 100) / 100} USDT
+            Şuanki grid dahil bakiye bölü ilk bakiye: ${Math.round(kazancorani * 100) / 100} X (yani toplam %${Math.round(100 * (Math.round(kazancorani * 100) / 100 - 1) * 100) / 100} ekstra gelir gelmiş.)
+            Bot başlarkenki coin fiyatı: ${dataFirstClose} USDT
+            Coin son fiyatı: ${data[data.length-1][4]} USDT
+            `;
+
+            console.log(istatistik);
+
+            let fileName = `${symbol}-${calculateDaysBetween(startDate,endDate)}gun-gridKarYuzde${Math.round(Math.round((gridprofit / yavilkbakiyeiste) * 100) * 100) / 100}-bakiyeX${Math.round(kazancorani * 100) / 100}-aralikYuzde${geometricPercentage}-${getCurrentDateTimeText()}`;
+            createAndWriteTxt(fileName, istatistik);
+            return istatistik;
+        } else {
+            throw new Error("Data is empty.");
+        }
+    } catch (e) {
+        console.log(`Hata: ${e}`);
+        return null;
+    }
+}
+
+
+
+    </script>
+</body>
+</html>

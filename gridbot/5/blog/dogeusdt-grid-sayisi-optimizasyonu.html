@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOGEUSDT Grid Bot: Grid Sayısı Optimizasyonu ve Kârlılık Analizi | recinilt.com</title>
+    <meta name="description" content="DOGEUSDT spot grid bot kurulumunda farklı grid sayılarının (ve dolayısıyla gridler arası yüzdelerin) kârlılığa etkisinin recinilt.com backtest aracı ile analizi.">
+    <meta name="keywords" content="grid bot, backtest, DOGEUSDT, binance, kripto bot, grid trading, kazanç hesaplama, performans analizi, recinilt, grid sayısı, optimizasyon">
+    <link rel="canonical" href="https://recinilt.com/blog/dogeusdt-grid-sayisi-optimizasyonu.html">
+    <link rel="icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style2.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6469332951045288" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6469332951045288">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YS1FNNJWXG"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YS1FNNJWXG');
+    </script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Anasayfa</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/hakkimizda.html">Hakkımızda</a></li>
+                <li><a href="/iletisim.html">İletişim</a></li>
+                <li><a href="/gizlilik-politikasi.html">Gizlilik Politikası</a></li>
+            </ul>
+        </nav>
+        <h1>Blog</h1>
+    </header>
+    <main>
+        <article>
+            <h2>DOGEUSDT Grid Bot: Grid Sayısı Optimizasyonu ve Kârlılık Analizi</h2>
+
+            <p>Bu makalede, recinilt.com backtest aracını kullanarak DOGEUSDT spot grid bot kurulumunda farklı grid sayılarının (ve dolayısıyla gridler arası yüzdelerin) kârlılığa etkisini inceleyeceğiz. Amacımız, 208 günlük bir periyotta hangi grid sayısının daha iyi performans gösterdiğini belirlemektir.</p>
+
+            <h3>Backtest Parametreleri:</h3>
+            <ul>
+                <li>Sembol: DOGEUSDT</li>
+                <li>Alt Sınır: 0.05 USDT</li>
+                <li>Üst Sınır: 0.5 USDT</li>
+                <li>Komisyon: %0.1</li>
+                <li>Zaman Dilimi: 5m</li>
+                <li>Başlangıç Tarihi: 2024-06-11</li>
+                <li>Bitiş Tarihi: 2025-01-05</li>
+                <li>Başlangıç Bakiyesi: 1000 USDT</li>
+            </ul>
+
+            <h3>Backtest Sonuçları (Farklı Grid Sayılarıyla):</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Grid Sayısı</th>
+                        <th>Gridler Arası Yüzde</th>
+                        <th>Tamamlanan İşlem</th>
+                        <th>Gridden Elde Edilen Kâr (USDT)</th>
+                        <th>Toplam Getiri (%) (Grid + Fiyat Artışı)</th>
+                        <th>Gerekli Min. Bakiye (USDT)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1000</td>
+                        <td>%0.23</td>
+                        <td>46616</td>
+                        <td>106.39</td>
+                        <td>%71.63</td>
+                        <td>13348</td>
+                    </tr>
+                    <tr>
+                        <td>750</td>
+                        <td>%0.31</td>
+                        <td>31116</td>
+                        <td>168.1</td>
+                        <td>%77.04</td>
+                        <td>10007</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>%0.46</td>
+                        <td>16254</td>
+                        <td>233.1</td>
+                        <td>%83.51</td>
+                        <td>6664</td>
+                    </tr>
+                    <tr>
+                        <td>340</td>
+                        <td>%0.68</td>
+                        <td>8157</td>
+                        <td>281.69</td>
+                        <td>%88.39</td>
+                        <td>4526</td>
+                    </tr>
+                    <tr>
+                        <td>225</td>
+                        <td>%1.03</td>
+                        <td>3708</td>
+                        <td>312.25</td>
+                        <td>%91.51</td>
+                        <td>2990</td>
+                    </tr>
+                    <tr>
+                        <td>150</td>
+                        <td>%1.56</td>
+                        <td>1651</td>
+                        <td>331.26</td>
+                        <td>%93.18</td>
+                        <td>1988</td>
+                    </tr>
+                    <tr>
+                        <td>100</td>
+                        <td>%2.35</td>
+                        <td>727</td>
+                        <td>336.4</td>
+                        <td>%93.14</td>
+                        <td>1318</td>
+                    </tr>
+                    <tr>
+                        <td>80</td>
+                        <td>%2.96</td>
+                        <td>450</td>
+                        <td>330.34</td>
+                        <td>%92.27</td>
+                        <td>1052</td>
+                    </tr>
+                     <tr>
+                        <td>60</td>
+                        <td>%3.98</td>
+                        <td>263</td>
+                        <td>340.76</td>
+                        <td>%93.01</td>
+                        <td>784</td>
+                    </tr>
+                    <tr>
+                        <td>40</td>
+                        <td>%6.08</td>
+                        <td>111</td>
+                        <td>320.41</td>
+                        <td>%90.34</td>
+                        <td>516</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
+                        <td>%12.88</td>
+                        <td>31</td>
+                        <td>330.99</td>
+                        <td>%89.29</td>
+                        <td>249</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Analiz ve Sonuç:</h3>
+
+            <p>Tablodan görüldüğü gibi, grid sayısı azaldıkça (gridler arası yüzde arttıkça) tamamlanan işlem sayısı azalmakta, ancak gridden elde edilen kâr ve toplam getiri başlangıçta artmakta, belli bir noktadan sonra ise tekrar düşüşe geçmektedir. En yüksek toplam getiri %93.18 ile 150 grid sayısında (%1.56 gridler arası yüzde) elde edilmiştir. Ancak, bu grid sayısının gerektirdiği minimum bakiye 1988 USDT'dir.</p>
+
+            <p>Eğer daha düşük bir bakiye ile başlamak isterseniz, örneğin 1000 USDT gibi, 80 grid (%2.96 gridler arası yüzde) veya 60 grid (%3.98 gridler arası yüzde) seçenekleri de %92 civarında getiri sağlamaktadır ve minimum bakiye gereksinimleri daha düşüktür. </p>
+
+                <h3>Önemli Notlar:</h3>
+                <ul>
+                <li>*   Bu analiz, belirli bir zaman dilimi (208 gün) ve belirli piyasa koşulları için geçerlidir. Farklı zaman dilimlerinde veya farklı piyasa koşullarında sonuçlar değişebilir.</li>
+                <li>*   Minimum bakiye gereksinimi, botun tüm gridleri kapsayabilmesi için gereklidir. Bu gereksinimi karşılamayan bakiyelerle bot çalışmayabilir veya beklenenden farklı sonuçlar verebilir.</li>
+                <li>*   Grid bot kullanırken risk yönetimi çok önemlidir. Kaybetmeyi göze alabileceğinizden daha fazla para ile işlem yapmamanız önerilir.</li>
+                </ul>
+                <h3>Tavsiye:</h3>
+                
+                <p>Bu backtest sonuçlarına göre, DOGEUSDT için 150 grid (%1.56 gridler arası yüzde) optimal gibi görünmektedir. Ancak, bütçeniz kısıtlıysa 80 veya 60 grid de iyi alternatifler sunmaktadır. En iyi sonucu elde etmek için, kendi risk toleransınıza ve bütçenize uygun grid sayısını seçmeniz ve botunuzun performansını düzenli olarak izlemeniz önemlidir. Ayrıca, piyasa koşullarını da göz önünde bulundurarak botunuzun parametrelerini gerektiğinde ayarlamanız önerilir.</p>
+                <p class="article-meta">Yayınlanma Tarihi: 05 Ocak 2025</p>
+        </article>
+    </main>
+    <footer>
+        <p>&copy; 2025 Grid Bot Backtest Aracı. Tüm hakları saklıdır. <a href="mailto:recepyeni@gmail.com">recepyeni@gmail.com</a></p>
+    </footer>
+</body>
+</html>

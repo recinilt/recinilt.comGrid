@@ -1,0 +1,67 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    line-height: 1.6;
+    background-color: #f8f9fa;
+    color: #343a40;
+    display: flex; /* Flexbox kullan */
+    flex-direction: column; /* Dikey hizalama */
+    min-height: 100vh; /* Minimum yükseklik */
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+nav li {
+    display: inline;
+    margin: 0 10px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    padding: 20px;
+    max-width: 960px;
+    margin: 20px auto;
+    flex: 1; /* Main içeriğin esnemesini sağla */
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #ddd;
+}
+
+/* Responsive tasarım için (isteğe bağlı) */
+@media (max-width: 768px) {
+    main {
+        padding: 10px;
+    }
+    nav li {
+        display: block;
+        margin: 5px 0;
+    }
+}

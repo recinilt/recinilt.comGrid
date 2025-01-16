@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YS1FNNJWXG"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YS1FNNJWXG');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Bot Araçları | Ücretsiz Grid Bot Backtest Aracı</title>
+    <meta name="description" content="Grid bot parametrelerinizi hesaplayın. Grid aralığı, grid seviyeleri ve daha fazlası için araçlar.">
+    <meta name="keywords" content="grid bot araçları, grid aralığı hesaplama, grid seviyeleri, kripto grid bot">
+    <link rel="canonical" href="https://recinilt.com/grid-bot-araclari.html">
+    <link rel="icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style2.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6469332951045288" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6469332951045288">
+    <style>
+        #results-container { 
+            /*margin-top: 20px; */
+            width: 50%;
+        
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Anasayfa</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/hakkimizda.html">Hakkımızda</a></li>
+                <li><a href="/iletisim.html">İletişim</a></li>
+                <li><a href="/gizlilik-politikasi.html">Gizlilik Politikası</a></li>
+            </ul>
+        </nav>
+        <h1>Grid Bot Araçları</h1>
+        <p>Grid bot parametrelerinizi kolayca hesaplayın.</p>
+    </header>
+    <main>
+        <div>
+            <section id="gridbot-form-section">
+                <form id="gridbot-form">
+                    <label for="division_type">Grid Tipi:</label>
+                    <select name="division_type" id="division_type">
+                        <option value="arithmetic">Aritmetik</option>
+                        <option value="geometric" selected>Geometrik</option>
+                    </select>
+
+                    <label for="start">Alt Seviye:</label>
+                    <input type="number" name="start" id="start" placeholder="Örn: 0.02" step="0.0001" required>
+
+                    <label for="end">Üst Seviye:</label>
+                    <input type="number" name="end" id="end" placeholder="Örn: 0.6" step="0.0001" required>
+
+                    <label for="num_levels">Grid Sayısı (Max: 1000):</label>
+                    <input type="number" name="num_levels" id="num_levels" placeholder="Örn: 200" max="1000" required>
+                </form>
+            </section>
+            <section id="results-section">
+                <h2>Sonuçlar</h2>
+                <div id="results-container">
+                    <div id="grid-arasi-yuzde">Gridler Arası Yüzde:</div>
+                    <div id="grid-seviyeleri"></div>
+                    <div id="grid-adimi"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 Grid Bot Backtest Aracı. Tüm hakları saklıdır. <a href="mailto:recepyeni@gmail.com">recepyeni@gmail.com</a></p>
+    </footer>
+
+    <script>
+        function geometric_division(start, end, num_levels, type = "geometric") {
+            if (num_levels <= 1) {
+                return [[], [0, 0], 0];
+            }
+
+            let levels = [];
+            let percentages = [];
+            let mystep = 0.0;
+
+            if (type.toLowerCase() === "geometric") {
+                let ratio = Math.pow(end / start, 1 / (num_levels - 1));
+                let current = start;
+
+                for (let i = 0; i < num_levels; i++) {
+                    levels.push(parseFloat(current.toFixed(8)));
+                    current *= ratio;
+                }
+
+                let geometric_percentage = levels.length > 1 ? ((levels[1] - levels[0]) / levels[0]) * 100 : 0;
+                percentages = [parseFloat(geometric_percentage.toFixed(2))];
+            } else if (type.toLowerCase() === "arithmetic") {
+                let step = (end - start) / (num_levels - 1);
+                mystep = step;
+                let current = start;
+
+                for (let i = 0; i < num_levels; i++) {
+                    levels.push(parseFloat(current.toFixed(8)));
+                    current += step;
+                }
+
+                if (levels.length > 1) {
+                    percentages.push(parseFloat(((levels[1] - levels[0]) / levels[0]) * 100).toFixed(2));
+                    percentages.push(parseFloat(((levels[levels.length - 1] - levels[levels.length - 2]) / levels[levels.length - 2]) * 100).toFixed(2));
+                } else {
+                    percentages = [0, 0];
+                }
+            } else {
+                return [[], [0, 0], 0];
+            }
+
+            return [levels, percentages, mystep];
+        }
+
+        function calculateResults() {
+            const startInput = document.getElementById('start');
+            const endInput = document.getElementById('end');
+            const numLevelsInput = document.getElementById('num_levels');
+            const typeSelect = document.getElementById('division_type');
+            const resultsContainer = document.getElementById('results-container');
+            const gridArasiYuzde = document.getElementById('grid-arasi-yuzde');
+            const gridSeviyeleri = document.getElementById('grid-seviyeleri');
+            const gridAdimi = document.getElementById('grid-adimi');
+
+            const start = parseFloat(startInput.value);
+            const end = parseFloat(endInput.value);
+            const num_levels = parseInt(numLevelsInput.value);
+            const type = typeSelect.value;
+
+            if (isNaN(start) || isNaN(end) || isNaN(num_levels) || start >= end || num_levels <= 1) {
+                gridArasiYuzde.textContent = "Lütfen geçerli değerler girin. Grid sayısı 1'den büyük olmalıdır ve alt seviye üst seviyeden küçük olmalıdır.";
+                gridSeviyeleri.textContent = "";
+                gridAdimi.textContent = "";
+                return;
+            }
+
+            try {
+                const [levels, percentages, mystep] = geometric_division(start, end, num_levels, type);
+
+                let percentageText = "";
+                if (type === "geometric") {
+                    percentageText = `Gridler Arası Yüzde: %${percentages[0]}`;
+                } else {
+                    percentageText = `Gridler Arası Yüzde: İlk: %${percentages[0]}, Son: %${percentages[1]}`;
+                }
+                gridArasiYuzde.textContent = percentageText;
+
+                //let levelsText = "Grid Seviyeleri: " + levels.join(", ");
+                //gridSeviyeleri.textContent = levelsText;
+
+                if (type === "arithmetic") {
+                    gridAdimi.textContent = `Grid Adımı: ${mystep.toFixed(8)}`;
+                } else {
+                    gridAdimi.textContent = ""; // Geometrikte adım yok
+                }
+
+            } catch (error) {
+                gridArasiYuzde.textContent = "Bir hata oluştu: " + error.message;
+                gridSeviyeleri.textContent = "";
+                gridAdimi.textContent = "";
+            }
+        }
+
+        const formElements = document.querySelectorAll('#gridbot-form input, #gridbot-form select');
+        formElements.forEach(element => {
+            element.addEventListener('input', calculateResults);
+            element.addEventListener('change', calculateResults);
+        });
+
+        window.addEventListener('load', calculateResults);
+    </script>
+
+</body>
+</html>

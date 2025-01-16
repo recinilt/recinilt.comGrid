@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+
+
+    <script>
+
+function girdiler() {
+    /*
+    // Değişkenleri global olarak tanımlayın
+    global.symbol;
+    global.start;
+    global.end;
+    global.num_levels;
+    global.comission;
+    global.girilenilkbakiye;
+    global.veriinterval;
+    global.veri_days_back;
+
+    global.levels;
+    global.geometric_percentage;
+    global.minmiktarondalik;
+    global.myticksize;
+    global.precision_info;
+    global.data_first_close;
+    global.data;
+    global.start_date;
+    global.end_date;
+    */
+    // Data çekme işlemi (vericekis fonksiyonuna bağımlı)
+    data = vericekis(veriinterval, start_date, end_date);
+    data_first_close = parseFloat(data[0][4]);
+
+    // Precision değerlerini hesaplama
+    const precisionData = get_precision(symbol);
+    minmiktarondalik = precisionData[0];
+    myticksize = precisionData[1];
+    precision_info = precisionData[2];
+
+    // Geometrik seviyeleri ve yüzdelik değişimi hesaplama
+    const divisionData = geometric_division(start, end, num_levels);
+    levels = divisionData[0];
+    geometric_percentage = divisionData[1];
+}
+
+
+function get_coin_price(symbol) {
+    /**
+     * Belirtilen coin çiftinin fiyatını döndürür.
+     * @param {string} symbol - Coin çifti (örn: 'ONEUSDT')
+     * @return {number|null} - Fiyat (float) veya hata durumunda null
+     */
+
+    const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol.toUpperCase()}`;
+    let xhr = new XMLHttpRequest();
+
+    try {
+        // HTTP GET isteği başlat
+        xhr.open("GET", url, false); // Senkron modda çalışır
+        xhr.send();
+
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            return parseFloat(response.price);
+        } else {
+            console.log(`Hata: ${xhr.status} - ${xhr.statusText}`);
+            return null;
+        }
+    } catch (e) {
+        console.log(`Hata: ${e.message}`);
+        return null;
+    }
+}
+
+
+function count_decimal_places(number) {
+    /**
+     * Bir sayının noktadan sonraki anlamlı basamak sayısını döndürür.
+     * @param {number} number - Kontrol edilecek sayı.
+     * @return {number} - Noktadan sonraki anlamlı basamak sayısı.
+     */
+
+    // Sayıyı normalize etmek için 10 tabanında logaritma kullan
+    const decimalPart = number.toString().split(".")[1];
+
+    if (decimalPart) {
+        // Anlamlı basamak sayısını hesapla
+        return decimalPart.split('').filter(val => val !== '.').count();
+    } else {
+        return 0;
+    }
+}
+
+
+
+function get_precision(symbol) {
+    /**
+     * Binance API kullanarak bir coinin precision değerlerini alır.
+     * @param {string} symbol - İşlem çifti (örn: "ONEUSDT").
+     * @return {Array} - [minmiktarondalik, myticksize, precision_info] şeklinde bir array döner.
+     */
+
+    const url = "https://api.binance.com/api/v3/exchangeInfo";
+    let xhr = new XMLHttpRequest();
+    let precision_info = {
+        baseAssetPrecision: null,
+        quoteAssetPrecision: null,
+        stepSize: null,
+        tickSize: null
+    };
+
+    try {
+        // HTTP GET isteği başlat
+        xhr.open("GET", url, false); // Senkron modda çalışır
+        xhr.send();
+
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+
+            // İlgili sembolün bilgilerini bul
+            const symbolData = response.symbols.find((s) => s.symbol === symbol.toUpperCase());
+            if (!symbolData) {
+                console.log(`${symbol} çifti bulunamadı.`);
+                return [null, null, null];
+            }
+
+            // Precision bilgilerini al
+            precision_info.baseAssetPrecision = symbolData.baseAssetPrecision;
+            precision_info.quoteAssetPrecision = symbolData.quoteAssetPrecision;
+
+            // Emir hassasiyetlerini al
+            symbolData.filters.forEach((filter) => {
+                if (filter.filterType === "LOT_SIZE") {
+                    precision_info.stepSize = filter.stepSize;
+                }
+                if (filter.filterType === "PRICE_FILTER") {
+                    precision_info.tickSize = filter.tickSize;
+                }
+            });
+
+            // Decimal hassasiyetlerini hesapla
+            const minmiktarondalik = count_decimal_places(precision_info.stepSize);
+            const myticksize = count_decimal_places(precision_info.tickSize);
+
+            return [minmiktarondalik, myticksize, precision_info];
+        } else {
+            console.log(`Hata: ${xhr.status} - ${xhr.statusText}`);
+            return [null, null, null];
+        }
+    } catch (e) {
+        console.log(`Hata: ${e.message}`);
+        return [null, null, null];
+    }
+}
+
+function geometric_division(start, end, num_levels) {
+    /**
+     * Belirli bir aralığı geometrik olarak bölerek seviyeleri döndürür.
+     * @param {number} start - Başlangıç değeri (aralığın alt sınırı).
+     * @param {number} end - Bitiş değeri (aralığın üst sınırı).
+     * @param {number} num_levels - Bölünmek istenen geometrik seviye sayısı.
+     * @return {Array} - [levels, geometric_percentage] şeklinde bir array döner.
+     */
+
+    if (num_levels <= 1) {
+        throw new Error("Number of levels must be greater than 1.");
+    }
+
+    let levels = [];
+    let ratio = Math.pow(end / start, 1 / (num_levels - 1)); // Geometrik oran
+    let current = start;
+
+    for (let i = 0; i < num_levels; i++) {
+        levels.push(parseFloat(current.toFixed(8))); // Hassasiyeti korumak için 8 basamak
+        current *= ratio;
+    }
+
+    let geometric_percentage = 0;
+    if (levels.length > 1) {
+        geometric_percentage = ((levels[1] - levels[0]) / levels[0]) * 100;
+    }
+
+    return [levels, parseFloat(geometric_percentage.toFixed(2))];
+}
+
+
+function collect_data(symbol, interval, start_date, end_date) {
+    /**
+     * Binance API'den belirtilen tarih aralığı için geçmiş fiyat verilerini toplar.
+     * @param {string} symbol - Coin çifti.
+     * @param {string} interval - Zaman aralığı (örn. "1m", "5m", "1h", "1d").
+     * @param {string} start_date - Başlangıç tarihi ("YYYY-MM-DD").
+     * @param {string} end_date - Bitiş tarihi ("YYYY-MM-DD").
+     * @return {Array} - Veriler [timestamp, open, high, low, close, volume] formatında.
+     */
+
+    const url = "https://api.binance.com/api/v3/klines";
+    let all_data = [];
+    const startTime = new Date(start_date).getTime();
+    const endTime = new Date(end_date).getTime();
+    let currentStartTime = startTime;
+
+    while (currentStartTime < endTime) {
+        let currentEndTime = Math.min(currentStartTime + 24 * 60 * 60 * 1000, endTime); // Günlük istek sınırı
+        const requestUrl = `${url}?symbol=${symbol.toUpperCase()}&interval=${interval}&startTime=${currentStartTime}&endTime=${currentEndTime}&limit=1000`;
+
+        let xhr = new XMLHttpRequest();
+
+        try {
+            xhr.open("GET", requestUrl, false); // Senkron istek
+            xhr.send();
+
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+
+                response.forEach((kline) => {
+                    all_data.push([
+                        new Date(kline[0]).toISOString(), // timestamp
+                        parseFloat(kline[1]), // open
+                        parseFloat(kline[2]), // high
+                        parseFloat(kline[3]), // low
+                        parseFloat(kline[4]), // close
+                        parseFloat(kline[5]) // volume
+                    ]);
+                });
+
+                // Son zaman damgasını güncelle
+                currentStartTime = response[response.length - 1][6];
+            } else {
+                console.log(`Hata: ${xhr.status} - ${xhr.statusText}`);
+                break;
+            }
+        } catch (e) {
+            console.log(`Hata: ${e.message}`);
+            break;
+        }
+    }
+
+    return all_data;
+}
+
+
+function vericekis(veriinterval, start_date, end_date) {
+    /**
+     * Kullanıcıdan başlangıç ve bitiş tarihine göre veri çekme fonksiyonu.
+     * @param {string} veriinterval - Zaman dilimi (örn. "1m", "5m", "1h", "1d").
+     * @param {string} start_date - Başlangıç tarihi ("YYYY-MM-DD").
+     * @param {string} end_date - Bitiş tarihi ("YYYY-MM-DD").
+     * @return {Array} - Veriler [timestamp, open, high, low, close, volume] formatında.
+     */
+
+    // Symbol değişkeni global olduğundan fonksiyon içinde kullanılabilir.
+    return collect_data(symbol, veriinterval, start_date, end_date);
+}
+
+function fetch_binance_klines(symbol, interval, start_time, end_time) {
+    /**
+     * Binance API'den belirli bir tarih aralığı için kline verilerini çeker.
+     * @param {string} symbol - Coin çifti.
+     * @param {string} interval - Zaman aralığı (örn. "1m", "5m", "1h", "1d").
+     * @param {Date} start_time - Başlangıç zamanı (Date nesnesi olarak).
+     * @param {Date} end_time - Bitiş zamanı (Date nesnesi olarak).
+     * @return {Array} - Binance API'den alınan kline verileri.
+     */
+
+    const url = "https://api.binance.com/api/v3/klines";
+    const params = `symbol=${symbol.toUpperCase()}&interval=${interval}&startTime=${Math.floor(start_time.getTime())}&endTime=${Math.floor(end_time.getTime())}&limit=1000`;
+    const requestUrl = `${url}?${params}`;
+
+    let xhr = new XMLHttpRequest();
+
+    try {
+        xhr.open("GET", requestUrl, false); // Senkron istek
+        xhr.send();
+
+        if (xhr.status === 200) {
+            return JSON.parse(xhr.responseText);
+        } else {
+            console.log(`Hata: ${xhr.status} - ${xhr.statusText}`);
+            throw new Error(`Binance API'den veri alınamadı: ${xhr.status}`);
+        }
+    } catch (e) {
+        console.log(`Hata: ${e.message}`);
+        return [];
+    }
+}
+
+
+function split_levels(levels, myclose, high = null, low = null) {
+    /**
+     * Levels listesini close değerine göre ikiye böler: düşük ve yüksek seviyeler.
+     * @param {Array} levels - Geometrik seviyelerin bir listesi.
+     * @param {number} myclose - Close değeri, seviyelere göre listeyi böler.
+     * @param {number|null} high - Yüksek fiyat değeri (isteğe bağlı).
+     * @param {number|null} low - Düşük fiyat değeri (isteğe bağlı).
+     * @return {Array} - [alinacaklar, satilacaklar] olarak iki liste döner.
+     */
+
+    if (!levels || levels.length === 0) {
+        console.error("Hata: 'levels' listesi boş!");
+        return [[], []];
+    }
+
+    let alinacaklar = [];
+    let satilacaklar = [];
+
+    if (low !== null && high !== null) {
+        if (high < levels[0]) {
+            alinacaklar = [];
+            satilacaklar = levels.slice();
+        } else if (low > levels[levels.length - 1]) {
+            alinacaklar = levels.slice();
+            satilacaklar = [];
+        }
+    } else {
+        if (myclose < levels[0]) {
+            alinacaklar = [];
+            satilacaklar = levels.slice();
+        } else if (myclose > levels[levels.length - 1]) {
+            alinacaklar = levels.slice();
+            satilacaklar = [];
+        }
+    }
+
+    if (alinacaklar.length === 0 && satilacaklar.length === 0) {
+        const closestLevel = levels.reduce((prev, curr) => 
+            Math.abs(curr - myclose) < Math.abs(prev - myclose) ? curr : prev
+        );
+
+        const filteredLevels = levels.filter(level => level !== closestLevel);
+
+        satilacaklar = filteredLevels.filter(level => level > myclose);
+        alinacaklar = filteredLevels.filter(level => level < myclose);
+    }
+
+    return [alinacaklar, satilacaklar];
+}
+
+function yuvarlaDeger(deger, hassasiyet) {
+    const carpim = Math.pow(10, hassasiyet);
+    return Math.ceil(deger * carpim) / carpim; // Python'daki ceil'e eşdeğer
+}
+
+function ilkbakiyehesapla() {
+    let gereklialtusdt = 0.0;
+    old_alinacaklar.forEach(level => {
+        gereklialtusdt += level * mymyq;
+    });
+    return yuvarlaDeger(gereklialtusdt, minmiktarondalik);
+}
+
+
+function ilkbakiyehesaplaiptal() {
+    /**
+     * İlk bakiye hesaplama fonksiyonu.
+     * @return {number} - Gerekli toplam USDT miktarı.
+     */
+
+    let q1 = 5.5 / start; // Başlangıç miktarını hesapla
+    let carpim = 1;
+
+    // Ondalık hassasiyetini ayarlama
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+
+    //q1 = Math.ceil(q1 * carpim) / carpim; // Miktarı yukarı yuvarla
+    q1=yuvarlaDeger(q1,minmiktarondalik)
+    let gereklialtusdt = 0.0;
+
+    // Alınacak seviyelerdeki toplam USDT'yi hesapla
+    for (let level of old_alinacaklar) {
+        gereklialtusdt += Math.ceil(level * q1 * carpim) / carpim;
+    }
+
+    // Satılacak seviyelerdeki toplam USDT'yi hesapla
+    let gerekliustusdt = Math.ceil(current_price * q1 * carpim) / carpim * old_satilacaklar.length;
+
+    return gereklialtusdt + gerekliustusdt;
+}
+
+function sonbakiyehesapla(close, alinacaklar, satilacaklar) {
+    let toplamBakiye = 0.0;
+    alinacaklar.forEach(level => {
+        toplamBakiye += level * mymyq;
+    });
+    toplamBakiye += close * mymyq * satilacaklar.length;
+    return yuvarlaDeger(toplamBakiye, minmiktarondalik);
+}
+
+
+function sonbakiyehesaplaiptal(sonclose, sonalinacaklar, sonsatilacaklar) {
+    /**
+     * Son bakiye hesaplama fonksiyonu.
+     * @param {number} sonclose - Son kapanış fiyatı.
+     * @param {Array} sonalinacaklar - Alınacak seviyeler listesi.
+     * @param {Array} sonsatilacaklar - Satılacak seviyeler listesi.
+     * @return {number} - Gerekli toplam USDT miktarı.
+     */
+
+    let q1 = 5.5 / start; // Başlangıç miktarını hesapla
+    let carpim = 1;
+
+    // Ondalık hassasiyetini ayarlama
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+
+    //q1 = Math.ceil(q1 * carpim) / carpim; // Miktarı yukarı yuvarla
+    q1=yuvarlaDeger(q1,minmiktarondalik)
+    let gereklialtusdt = 0.0;
+
+    // Alınacak seviyelerdeki toplam USDT'yi hesapla
+    for (let level of sonalinacaklar) {
+        gereklialtusdt += Math.ceil(level * q1 * carpim) / carpim;
+    }
+
+    // Satılacak seviyelerdeki toplam USDT'yi hesapla
+    let gerekliustusdt = Math.ceil(sonclose * q1 * carpim) / carpim * sonsatilacaklar.length;
+
+    return gereklialtusdt + gerekliustusdt;
+}
+
+function find_excess_items(old_list, new_list) {
+    /**
+     * Yeni alinacaklar listesindeki, eski alinacaklar listesine göre fazla olan elemanları döndürür.
+     * @param {Array} old_list - Eski alinacaklar listesi.
+     * @param {Array} new_list - Yeni alinacaklar listesi.
+     * @return {Array} - Yeni alinacaklar listesindeki fazla elemanlar.
+     */
+
+    // Yeni listede olup eski listede olmayan elemanları bul
+    let excess_items = new_list.filter(item => !old_list.includes(item));
+    return excess_items;
+}
+
+function get_coin_data(symbol) {
+    /**
+     * Coin çiftinin fiyat, high ve low değerlerini döndürür.
+     * @param {string} symbol - Coin çifti (örn: 'ONEUSDT').
+     * @return {Array|null} - [price, high, low] veya hata durumunda null.
+     */
+
+    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol.toUpperCase()}`;
+    let xhr = new XMLHttpRequest();
+
+    try {
+        // HTTP GET isteği başlat
+        xhr.open("GET", url, false); // Senkron modda çalışır
+        xhr.send();
+
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+
+            // Fiyat, yüksek ve düşük değerleri döndür
+            const price = parseFloat(response.lastPrice);
+            const high = parseFloat(response.highPrice);
+            const low = parseFloat(response.lowPrice);
+            return [price, high, low];
+        } else {
+            console.log(`Hata: ${xhr.status} - ${xhr.statusText}`);
+            return null;
+        }
+    } catch (e) {
+        console.log(`Hata: ${e.message}`);
+        return null;
+    }
+}
+
+
+function ilkgiris() {
+    /**
+     * İlk giriş işlemlerini yapar, alınacak ve satılacak seviyeleri ayırır ve gerekli işlemleri yapar.
+     */
+
+    // Global değişkenler kullanılıyor
+    let alinacaklar, satilacaklar;
+    [alinacaklar, satilacaklar] = split_levels(levels, data_first_close);
+
+    let new_alinacaklar = [...alinacaklar];
+    let new_satilacaklar = [...satilacaklar];
+
+    // Yeni alınacak seviyeler için işlem
+    if (new_alinacaklar.length > 0) {
+        new_alinacaklar.forEach(orderprice => {
+            console.log("Aşağıya al emri konuldu:", orderprice);
+        });
+    }
+
+    let carpim = 1;
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+
+    let alinacakcoin = yuvarlaDeger(0.0000000000001,minmiktarondalik)//Math.ceil(0.00000000000001 * carpim) / carpim;
+
+    // Yeni satılacak seviyeler için işlem
+    if (new_satilacaklar.length > 0) {
+        new_satilacaklar.forEach(orderprice => {
+            let quantity = mymyq;
+            alinacakcoin += quantity;
+            console.log("Yukarıya sat emri konuldu:", orderprice, quantity);
+        });
+    }
+
+    alinacakcoin = Math.ceil(alinacakcoin * carpim) / carpim;
+
+    // Market alım işlemi
+    console.log("Şu kadar başlangıç için coin alındı:", alinacakcoin);
+}
+
+
+function create_and_write_txt(file_name, content) {
+    /**
+     * Belirtilen isimle bir txt dosyası oluşturur ve içine belirtilen içeriği yazar.
+     * @param {string} file_name - Dosya adı (uzantı .txt ile bitmeli).
+     * @param {string} content - Dosyaya yazılacak içerik.
+     */
+
+    // Node.js veya dosya sistemi modülleri olmadan çalışacak bir ortamda dosya oluşturma mümkün değildir.
+    // Bunun yerine, tarayıcı ortamı için indirme işlemi yapılabilir.
+
+    if (!file_name.endsWith('.txt')) {
+        file_name += '.txt';
+    }
+
+    try {
+        // Tarayıcı ortamında dosya oluşturup indirme işlemi
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        console.log(`'${file_name}' dosyası başarıyla oluşturuldu ve indirildi.`);
+    } catch (e) {
+        console.log(`Hata oluştu: ${e.message}`);
+    }
+}
+
+
+function read_api_key(dosya) {
+    /**
+     * Belirtilen dosyadan API anahtarını okur.
+     * @param {string} dosya - API anahtarı içeren dosya adı.
+     * @return {string|null} - Dosyadan okunan API anahtarı veya hata durumunda null.
+     */
+
+    console.error("Tarayıcı ortamında dosya sistemi doğrudan kullanılamaz.");
+    return null;
+
+    /**
+     * Eğer Node.js ortamında olsaydı:
+     *
+     * const fs = require('fs');
+     * try {
+     *     const data = fs.readFileSync(dosya, 'utf-8');
+     *     return data.trim(); // Dosyadaki metni okuyup boşlukları temizler
+     * } catch (e) {
+     *     console.log("Hata oluştu:", e.message);
+     *     return null; // Dosya bulunamazsa veya okunamazsa null döner
+     * }
+     */
+}
+
+
+function check_api_key_file() {
+    /**
+     * Çalışma dizinindeki "a.txt" ve "s.txt" dosyalarının varlığını kontrol eder.
+     * @return {boolean} - Her iki dosya mevcutsa true, aksi halde false.
+     */
+
+    console.error("Tarayıcı ortamında dosya sistemi doğrudan kullanılamaz.");
+    return false;
+
+    /**
+     * Eğer Node.js ortamında olsaydı:
+     *
+     * const fs = require('fs');
+     * const apiFileExists = fs.existsSync("a.txt");
+     * const secretFileExists = fs.existsSync("s.txt");
+     * return apiFileExists && secretFileExists;
+     */
+}
+
+
+function get_current_datetime_text() {
+    /**
+     * Şimdiki zamanı yıl, ay, gün, saat, dakika ve saniye olarak metin şeklinde döndürür.
+     * @return {string} - Yıl, ay, gün, saat, dakika ve saniyeyi içeren zaman bilgisi.
+     */
+
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Aylar 0'dan başlar, 2 basamaklı format
+    const day = String(now.getDate()).padStart(2, '0'); // Gün
+    const hours = String(now.getHours()).padStart(2, '0'); // Saat
+    const minutes = String(now.getMinutes()).padStart(2, '0'); // Dakika
+    const seconds = String(now.getSeconds()).padStart(2, '0'); // Saniye
+
+    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+}
+
+
+function toplam_kar_hesapla(son_fiyat, yuzde_artis, komisyon_orani, lot_sayisi) {
+    /**
+     * Toplam karı hesaplar.
+     * @param {number} son_fiyat - İşlemin bitiş fiyatı.
+     * @param {number} yuzde_artis - Başlangıç fiyatından itibaren yüzde artış (örn: 1 için %1).
+     * @param {number} komisyon_orani - Komisyon oranı (örn: 0.003 için %0.3).
+     * @param {number} lot_sayisi - İşlem yapılan toplam lot sayısı.
+     * @return {number} - İşlemden elde edilen toplam kar.
+     */
+
+    // Başlangıç fiyatını hesapla
+    const baslangic_fiyati = son_fiyat / (1 + yuzde_artis);
+
+    // Birim başına karı hesapla
+    const birim_kar = (son_fiyat - baslangic_fiyati) - (son_fiyat * komisyon_orani);
+
+    // Toplam karı hesapla
+    const toplam_kar = birim_kar * lot_sayisi;
+
+    return toplam_kar;
+}
+
+
+function ilkveonbakiyehesapla() {
+    /**
+     * İlk ve son bakiye hesaplamalarını yapar.
+     * @return {Array} - [mymyilkbakiye, suankibakiye] şeklinde ilk ve son bakiye değerlerini döndürür.
+     */
+
+    let mymyilkprice = parseFloat(data[0][4]);
+    let mymyilkhigh = parseFloat(data[0][2]);
+    let mymyilklow = parseFloat(data[0][3]);
+    let mymysonprice = parseFloat(data[data.length - 1][4]);
+    let mymysonhigh = parseFloat(data[data.length - 1][2]);
+    let mymysonlow = parseFloat(data[data.length - 1][3]);
+
+    levels = geometric_division(start, end, num_levels)[0];
+
+    let mymyilkbakiye = 0.0;
+    let suankibakiye = 0.0;
+
+    try {
+        let ilk_alinacaklar, ilk_satilacaklar;
+        [ilk_alinacaklar, ilk_satilacaklar] = split_levels(levels, mymyilkprice, mymyilkhigh, mymyilklow);
+
+        let son_alinacaklar, son_satilacaklar;
+        [son_alinacaklar, son_satilacaklar] = split_levels(levels, mymysonprice, mymysonhigh, mymysonlow);
+
+        mymyilkbakiye = sonbakiyehesapla(mymyilkprice, ilk_alinacaklar, ilk_satilacaklar);
+        suankibakiye = sonbakiyehesapla(mymysonprice, son_alinacaklar, son_satilacaklar);
+    } catch (e) {
+        console.log("Hata oluştu:", e.message);
+    }
+
+    return [mymyilkbakiye, suankibakiye];
+}
+
+function calculate_days_between(start_date, end_date) {
+    /**
+     * İki tarih arasındaki gün sayısını hesaplar.
+     * @param {string} start_date - Başlangıç tarihi ('YYYY-MM-DD' formatında).
+     * @param {string} end_date - Bitiş tarihi ('YYYY-MM-DD' formatında).
+     * @return {number|null} - İki tarih arasındaki gün sayısı veya hata durumunda null.
+     */
+
+    try {
+        // Tarihleri oluştur
+        const start = new Date(start_date);
+        const end = new Date(end_date);
+
+        // Tarihler geçerli mi kontrol et
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            throw new Error("Geçersiz tarih formatı.");
+        }
+
+        if (start > end) {
+            throw new Error("Başlangıç tarihi bitiş tarihinden önce olmalıdır.");
+        }
+
+        // Gün farkını hesapla
+        const difference = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        return difference;
+    } catch (e) {
+        console.log(`Hata: ${e.message}`);
+        return null;
+    }
+}
+
+
+function process_close_values(data) {
+    /**
+     * Verilen veri listesindeki 'close', 'high' ve 'low' sütunlarındaki değerleri işlemeye olanak tanır.
+     * @param {Array} data - Binance API'den alınan veri.
+     */
+
+    try {
+        if (!data || data.length === 0) {
+            throw new Error("Veri listesi boş.");
+        }
+
+        let sonkapanis = 0;
+        let satimsayisi = 0;
+
+        data.forEach(row => {
+            const close_value = parseFloat(row[4]);
+            const high_value = parseFloat(row[2]);
+            const low_value = parseFloat(row[3]);
+
+            if (close_value > start && close_value < end) {
+                let new_alinacaklar, new_satilacaklar;
+
+                try {
+                    [new_alinacaklar, new_satilacaklar] = split_levels(levels, close_value, high_value, low_value);
+                } catch (e) {
+                    console.log(`Hata: ${e.message}`);
+                    new_alinacaklar = [...old_alinacaklar];
+                    new_satilacaklar = [...old_satilacaklar];
+                }
+
+                const fazlalikalinacaklar = find_excess_items(old_alinacaklar, new_alinacaklar);
+                const fazlaliksatilacaklar = find_excess_items(old_satilacaklar, new_satilacaklar);
+
+                old_alinacaklar = [...new_alinacaklar];
+                old_satilacaklar = [...new_satilacaklar];
+
+                if (fazlalikalinacaklar.length > 0) {
+                    satimsayisi += fazlalikalinacaklar.length;
+
+                    fazlalikalinacaklar.forEach(price => {
+                        gridprofit += toplam_kar_hesapla(price, geometric_percentage * 0.01, comission * 0.01, mymyq);
+                    });
+                }
+            }
+
+            sonkapanis = close_value;
+        });
+
+        const yavilkbakiyeiste = ilkveonbakiyehesapla()[0];
+        const yavsonbakiyeiste = ilkveonbakiyehesapla()[1];
+
+        const kazancorani = (yavsonbakiyeiste + gridprofit) / yavilkbakiyeiste;
+        const girilenboluminbakiye = (girilenilkbakiye / yavilkbakiyeiste).toFixed(2);
+
+        const istatistik = `
+        Sembol: ${symbol}
+        Alt sınır: ${start} USDT
+        Üst sınır: ${end} USDT
+        Grid Sayısı: ${num_levels}
+        Komisyon: %${comission}
+        Kaç gündür bot çalışıyor: ${calculate_days_between(start_date, end_date)} gün
+        Gridler arası yüzde: %${geometric_percentage}
+        Binance'ta açmak için gerekli min. bakiye: ${yavilkbakiyeiste} USDT
+        Başlangıç bakiyesi: ${girilenilkbakiye} USDT
+        Tamamlanmış işlem sayısı: ${satimsayisi}
+        Gridden elde edilen realized USDT: ${(gridprofit * girilenboluminbakiye).toFixed(2)} USDT
+        Grid'den yüzde kazanç: ${(gridprofit / yavilkbakiyeiste * 100).toFixed(2)}%
+        Şuanki grid dahil bakiye: ${(yavsonbakiyeiste + gridprofit * girilenboluminbakiye).toFixed(2)} USDT
+        Bot başlarkenki coin fiyatı: ${data[0][4]} USDT
+        Coin son fiyatı: ${data[data.length - 1][4]} USDT
+        `;
+
+        console.log(istatistik);
+    } catch (e) {
+        console.log(`Hata: ${e.message}`);
+    }
+}
+
+
+function mybacktest(symbolg, startg, endg, num_levelsg, comissiong, girilenilkbakiyeg, veriintervalg, start_dateg, end_dateg) {
+    /**
+     * Backtest işlemini çalıştırır.
+     * @param {string} symbolg - Coin çifti.
+     * @param {string} startg - Alt sınır.
+     * @param {string} endg - Üst sınır.
+     * @param {number} num_levelsg - Grid seviyesi.
+     * @param {string} comissiong - Komisyon yüzdesi.
+     * @param {string} girilenilkbakiyeg - Başlangıç bakiyesi.
+     * @param {string} veriintervalg - Veri aralığı.
+     * @param {string} start_dateg - Başlangıç tarihi.
+     * @param {string} end_dateg - Bitiş tarihi.
+     * @return {string} - İşlem istatistiklerini döndürür.
+     */
+
+    // Global değişkenleri güncelle
+    if (symbolg.toUpperCase().includes("USDT")) {
+        symbol = symbolg.toUpperCase();
+    } else {
+        symbol = symbolg.toUpperCase() + "USDT";
+    }
+
+    start = parseFloat(String(startg).replace(",", "."));
+    end = parseFloat(String(endg).replace(",", "."));
+    num_levels = parseInt(num_levelsg, 10);
+    comission = parseFloat(String(comissiong).replace(",", "."));
+    girilenilkbakiye = parseFloat(String(girilenilkbakiyeg).replace(",", "."));
+    veriinterval = veriintervalg.toLowerCase();
+    start_date = start_dateg;
+    end_date = end_dateg;
+
+    console.log("Backtest çalışmaya başladı");
+
+    // Verileri ve precision bilgilerini yükle
+    girdiler();
+
+    current_price = get_coin_price(symbol);
+    let alinacaklar, satilacaklar;
+    [alinacaklar, satilacaklar] = split_levels(levels, data_first_close);
+
+    old_alinacaklar = [...alinacaklar];
+    old_satilacaklar = [...satilacaklar];
+    new_alinacaklar = [...alinacaklar];
+    new_satilacaklar = [...satilacaklar];
+
+    console.log("Precision bilgileri:", minmiktarondalik);
+
+    //mymyq = 5.5 / start;
+    mymyq = yuvarlaDeger(5.5 / start, minmiktarondalik);
+
+    let carpim = 1;
+    for (let i = 0; i < minmiktarondalik; i++) {
+        carpim *= 10;
+    }
+    //mymyq = Math.ceil(mymyq * carpim) / carpim;
+    //mymyq = yuvarlaDeger(mymyq, minmiktarondalik);
+
+
+    const ilkbakiye = ilkbakiyehesapla();
+    console.log("Minimum gerekli toplam USDT:", ilkbakiye);
+    console.log("Gridler arası yüzdelik değişim:", geometric_percentage);
+
+    ilkgiris();
+
+    console.log("Grid Seviyeleri:", levels);
+    console.log("Miktar:", mymyq);
+    console.log("Komisyon:", comission);
+
+    return process_close_values(data);
+}
+
+// Gerekli global değişkenler
+let levels = [];
+let geometric_percentage = 1.1;
+
+let symbol = "";
+let start = 1.1;
+let end = 1.1;
+let num_levels = 1;
+let comission = 1.1;
+let minmiktarondalik = 1;
+let myticksize = 1;
+let precision_info = {};
+let data_first_close = 0.032;
+let veriinterval = "1m";
+let veri_days_back = 3;
+let data = [];
+let girilenilkbakiye = 0;
+let mymyq = 0.0;
+let carpim = 1;
+let old_alinacaklar = [];
+let old_satilacaklar = [];
+let start_date = "2024-04-17";
+let end_date = "2024-07-27";
+let gridprofit = 0.0000001;
+
+// Geçici değişkenler
+let alinacaklar = [];
+let satilacaklar = [];
+let oncekialinacaklar = [];
+let oncekisatilacaklar = [];
+let oncekialinacaklevelsonprice = 1000000;
+let oncekisatilacaklevelilkprice = 1000000;
+
+// Diğer yardımcı değişkenler
+let current_price = 0;
+
+// İşlem İstatistikleri
+
+let new_alinacaklar = [];
+let new_satilacaklar = [];
+let fazlalikalinacaklar = [];
+let fazlaliksatilacaklar;
+
+// Hata kontrolü için
+try {
+    // Verilerin doğru şekilde başlatıldığından emin olun
+    if (!levels || !symbol || !veriinterval) {
+        console.log("Global değişkenler eksik tanımlanmış olabilir.");
+    }
+} catch (e) {
+    console.log(`Hata: ${e.message}`);
+}
+
+// Diğer JavaScript Kod Blokları
+// Örneğin, başlangıç ve bitiş tarihlerini işlemek:
+function initialize_dates() {
+    if (!start_date || !end_date) {
+        console.log("Tarih değerleri eksik.");
+        start_date = "2024-01-01"; // Varsayılan başlangıç tarihi
+        end_date = "2024-12-31";   // Varsayılan bitiş tarihi
+    }
+}
+initialize_dates();
+
+// Precision değerlerinin kontrolü
+if (!precision_info || Object.keys(precision_info).length === 0) {
+    console.log("Precision bilgileri henüz yüklenmemiş.");
+}
+
+// Miktar hesaplama
+function initialize_miktar() {
+    if (start > 0) {
+        mymyq = 5.5 / start;
+        for (let i = 0; i < minmiktarondalik; i++) {
+            carpim *= 10;
+        }
+        //mymyq = Math.ceil(mymyq * carpim) / carpim;
+        mymyq=yuvarlaDeger(mymyq,minmiktarondalik)
+    } else {
+        console.log("Başlangıç değeri sıfırdan büyük olmalıdır.");
+    }
+}
+initialize_miktar();
+
+// İstatistiklerin yazdırılması
+function print_statistics() {
+    console.log(`Sembol: ${symbol}`);
+    console.log(`Alt Sınır: ${start}`);
+    console.log(`Üst Sınır: ${end}`);
+    console.log(`Grid Seviyeleri: ${num_levels}`);
+    console.log(`Komisyon: ${comission}`);
+    console.log(`Başlangıç Bakiyesi: ${girilenilkbakiye}`);
+}
+print_statistics();
+
+console.log(mybacktest("BTCUSDT", 40000, 150000, 200, 0.1, 1000, "5m", "2024-12-01", "2024-12-31"))
+    </script>
+</body>
+</html>

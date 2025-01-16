@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YS1FNNJWXG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-YS1FNNJWXG');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ücretsiz Grid Bot Backtest Aracı | Kripto Kazanç Hesaplama</title>
+    <meta name="description" content="Ücretsiz grid bot backtest aracımızla kripto para kazancınızı simüle edin! Geçmiş verilerle spot grid bot stratejilerinizi test edin, karlılığı hesaplayın ve riskleri minimize edin. Binance ve diğer borsalar için uyumlu. Hemen deneyin!">
+    <meta name="keywords" content="grid bot backtest, spot grid bot kazanç hesaplama, kripto grid bot stratejileri, binance grid bot, grid trading bot, ücretsiz grid bot aracı, kripto para botu, otomatik alım satım, backtesting">
+    <link rel="canonical" href="https://recinilt.com/">
+    <link rel="icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="recinilt.ico" type="image/x-icon">
+    <link rel="preload" href="myscript6.js" as="script">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style2.css">
+    <script type="application/ld+json"> 
+        {
+            "@context": "https://schema.org/",
+            "@type": "WebSite",
+            "name": "Grid Bot Backtest Aracı",
+            "url": "https://recinilt.com/",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "{search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6469332951045288"
+     crossorigin="anonymous"></script>
+     <meta name="google-adsense-account" content="ca-pub-6469332951045288">
+
+     <style>
+        .info-container { /* Kapsayıcı alan */
+            display: inline-block; /* Yan yana durması için */
+            position: relative; /* İpucu için konumlandırma */
+            margin-left: 5px; /* İkon ile metin arasında boşluk */
+        }
+
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            line-height: 16px;
+            border-radius: 50%;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: normal;
+            box-sizing: border-box;
+        }
+
+        .info-container:hover .tooltip { /* Kapsayıcıya hover olduğunda ipucu görünür */
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip a {
+            color: lightblue;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Anasayfa</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/hakkimizda.html">Hakkımızda</a></li>
+                <li><a href="/iletisim.html">İletişim</a></li>
+                <li><a href="/gizlilik-politikasi.html">Gizlilik Politikası</a></li>
+            </ul>
+        </nav>
+        <h1>Ücretsiz Grid Bot Backtest Aracı</h1>
+        <p>Geçmiş verilerle spot grid bot kazancınızı hesaplayın. Kripto bot stratejileri, komisyon hesaplamaları ve daha fazlası burada!</p>
+    </header>
+    <main>
+        <section id="backtest-form-section">
+            <form id="gridbot-form">
+                <p>Grid bot backtesti, girdiğiniz geçmiş iki tarih arasında spot grid bot kullansaydınız, tahmini kazancınızı gösterir. Lütfen parantez içindeki örnek formatında giriniz.</p>
+                <p class="uyari">Veri işleme süresi, seçilen tarih aralığına bağlı olarak değişebilir. Lütfen işlemin tamamlanmasını bekleyiniz.</p>
+                <label for="symbol">Coin Çifti (Örn: ONEUSDT):</label>
+                <input type="text" name="symbol" id="symbol" placeholder="ONEUSDT" required>
+
+                <label for="division_type">Grid bot tipi:</label>
+                <select name="division_type" id="division_type">
+                    <option value="arithmetic">Arithmetic</option>
+                    <option value="geometric" selected>Geometric</option>
+                </select>
+
+
+                <label for="start">Alt Seviye (Örn: 0.02):</label>
+                <input type="number" name="start" id="start" placeholder="0.02" step="0.0001" required>
+
+                <label for="end">Üst Seviye (Örn: 0.6):</label>
+                <input type="number" name="end" id="end" placeholder="0.6" step="0.0001" required>
+
+                <label for="num_levels">Grid Sayısı (Max: 1000):
+                    <span class="info-container"> 
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">
+                        <h3>Hangisini Seçeyim?</h3>
+                        <p>Grid sayısı seçimi yardımı için blog sayfamızdaki DOGEUSDT Grid Bot: Grid Sayısı Optimizasyonu ve Kârlılık Analizi makalemizi okuyunuz.</p>
+                        </span>
+                    </span>
+                </label>
+                <input type="number" name="num_levels" id="num_levels" placeholder="200" max="1000" required>
+
+                <label for="comission">Komisyon Oranı (%):
+                    <span class="info-container"> 
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">
+                        <h3>Hangisini Seçeyim?</h3>
+                        <p>Binance'ta komisyon oranı yüzde 0.1'dir.</p>
+                        </span>
+                    </span>
+                </label>
+                <input type="number" name="comission" id="comission" placeholder="0.1" step="0.001" required>
+
+                <label for="girilenilkbakiye">Başlangıç Sermayesi (USDT):</label>
+                <input type="number" name="girilenilkbakiye" id="girilenilkbakiye" placeholder="1000" required>
+
+                <label for="veriinterval">Zaman Dilimi (Örn: 5m, 15m, 1h, 4h, 1d):
+                    <span class="info-container"> 
+                        <span class="info-icon">i</span>
+                        <span class="tooltip">
+                        <h3>Hangisini Seçeyim?</h3>
+                        <p>Zaman dilimi seçimi yardımı için blog sayfamızdaki DOGEUSDT Grid Bot Performans Karşılaştırması makalemizi okuyunuz.</p>
+                        </span>
+                    </span>
+                </label>
+                <input type="text" name="veriinterval" id="veriinterval" placeholder="5m" required>
+
+                <label for="start_date">Başlangıç Tarihi:</label>
+                <input type="date" id="start_date" name="start_date" required>
+
+                <label for="end_date">Bitiş Tarihi:</label>
+                <input type="date" id="end_date" name="end_date" required>
+
+                <button type="button" id="submit-button" onclick="hesaplabutton()">Hesapla</button>
+            </form>
+        </section>
+        <section id="results-section">
+            <h2 id="beklemeyazisi">Grid Bot Kazanç Hesaplama Sonuçları</h2>
+            <div class="results" id="results"></div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Grid Bot Backtest Aracı. Tüm hakları saklıdır. <a href="mailto:recepyeni@gmail.com">recepyeni@gmail.com</a></p>
+    </footer>
+    <script src="myscript6.js"></script>
+</body>
+</html>
