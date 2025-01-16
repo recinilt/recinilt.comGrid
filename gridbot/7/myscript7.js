@@ -1310,7 +1310,7 @@ function process_close_values(data) {
 <li>Coin son fiyatı: ${data[data.length - 1][4]} USDT</li>
 <li>Her ay, gridden ekstra kazandığını tekrar aynı gride yatırsaydı (yani bileşik faiz yapsaydı):
 <li>Bileşik faiz yapsaydı, sonuçta, ${sonuc-girilenilkbakiye} sadece grid getirisi olurdu.</li>
-<li>Bileşik faiz yapsaydı, sadece gridden, anaparanın ${katlama-1} katı ekstra kazanç elde ederdi.</li>
+<li>Bileşik faiz yapsaydı, sadece gridden, anaparanın ${katlama-1} katı kazanç elde ederdi.</li>
 </ul>
             `;
 
