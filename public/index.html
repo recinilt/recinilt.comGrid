@@ -205,6 +205,10 @@
                 </label>
                 <input type="number" name="num_levels" id="num_levels" placeholder="200" max="1000" required>
 
+                <div id="grid-arasi-yuzde" style="margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                    Gridler Arası Yüzde: ?
+                </div>
+                
                 <label for="comission">Komisyon Oranı (%):
                     <span class="info-container"> 
                         <span class="info-icon">i</span>
@@ -257,5 +261,91 @@
         <p>&copy; 2025 Grid Bot Backtest Aracı. Tüm hakları saklıdır. <a href="mailto:recepyeni@gmail.com">recepyeni@gmail.com</a></p>
     </footer>
     <script src="myscript7.js"></script>
+    <script>
+        function geometric_division(start, end, num_levels, type = "geometric") {
+            if (num_levels <= 1) {
+                return [[], [0, 0], 0];
+            }
+    
+            let levels = [];
+            let percentages = [];
+            let mystep = 0.0;
+    
+            if (type.toLowerCase() === "geometric") {
+                let ratio = Math.pow(end / start, 1 / (num_levels - 1));
+                let current = start;
+    
+                for (let i = 0; i < num_levels; i++) {
+                    levels.push(parseFloat(current.toFixed(8)));
+                    current *= ratio;
+                }
+    
+                let geometric_percentage = levels.length > 1 ? ((levels[1] - levels[0]) / levels[0]) * 100 : 0;
+                percentages = [parseFloat(geometric_percentage.toFixed(2))];
+            } else if (type.toLowerCase() === "arithmetic") {
+                let step = (end - start) / (num_levels - 1);
+                mystep = step;
+                let current = start;
+    
+                for (let i = 0; i < num_levels; i++) {
+                    levels.push(parseFloat(current.toFixed(8)));
+                    current += step;
+                }
+    
+                if (levels.length > 1) {
+                    percentages.push(parseFloat(((levels[1] - levels[0]) / levels[0]) * 100).toFixed(2));
+                    percentages.push(parseFloat(((levels[levels.length - 1] - levels[levels.length - 2]) / levels[levels.length - 2]) * 100).toFixed(2));
+                } else {
+                    percentages = [0, 0];
+                }
+            } else {
+                return [[], [0, 0], 0];
+            }
+    
+            return [levels, percentages, mystep];
+        }
+    
+        function calculateGridPercentage() {
+            const startInput = document.getElementById('start');
+            const endInput = document.getElementById('end');
+            const numLevelsInput = document.getElementById('num_levels');
+            const typeSelect = document.getElementById('division_type');
+            const gridArasiYuzde = document.getElementById('grid-arasi-yuzde');
+    
+            const start = parseFloat(startInput.value);
+            const end = parseFloat(endInput.value);
+            const num_levels = parseInt(numLevelsInput.value);
+            const type = typeSelect.value;
+    
+            if (isNaN(start) || isNaN(end) || isNaN(num_levels) || start >= end || num_levels <= 1) {
+                gridArasiYuzde.textContent = "Gridler Arası Yüzde: ?";
+                return;
+            }
+    
+            try {
+                const [levels, percentages, mystep] = geometric_division(start, end, num_levels, type);
+    
+                let percentageText = "";
+                if (type === "geometric") {
+                    percentageText = `Gridler Arası Yüzde: %${percentages[0]}`;
+                } else {
+                    percentageText = `Gridler Arası Yüzde: İlk: %${percentages[0]}, Son: %${percentages[1]}`;
+                }
+                gridArasiYuzde.textContent = percentageText;
+    
+            } catch (error) {
+                gridArasiYuzde.textContent = "Gridler Arası Yüzde: ?";
+            }
+        }
+    
+        const gridFormElements = document.querySelectorAll('#gridbot-form input, #gridbot-form select');
+        gridFormElements.forEach(element => {
+            element.addEventListener('input', calculateGridPercentage);
+            element.addEventListener('change', calculateGridPercentage);
+        });
+    
+        window.addEventListener('load', calculateGridPercentage);
+    </script>
+    
 </body>
 </html>
