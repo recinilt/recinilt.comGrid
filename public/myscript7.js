@@ -62,7 +62,7 @@ function enableInteractions() {
         document.body.removeChild(overlay);
     }
 }
-
+ 
 function hesaplabutton() {
     const symbol = document.getElementById("symbol");
     const division_type=document.getElementById("division_type");
