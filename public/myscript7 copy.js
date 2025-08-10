@@ -1549,19 +1549,6 @@ function process_close_values(data) {
             var aySayisi=(kacGundurBotCalisiyor/30).toFixed(0);
             const [sonuc, katlama] = bilesikFaizHesapla(girilenilkbakiye, aylikKazancYuzdesi, aySayisi);
 
-            // Mevcut koddan sonra ekle:
-            var yillikKazancYuzdesi = parseFloat((365 * ((gridprofit / yavilkbakiyeiste) * 100) / calculate_days_between(start_date, end_date)).toFixed(2));
-            var gunlukKazancYuzdesi = parseFloat((yillikKazancYuzdesi / 365).toFixed(6));
-
-            const yillar = [1,2,3,4,5,6,7,8,9,10,15,20,25,30];
-            const gunlukBilesikSonuclar = gunlukBilesikFaizHesapla(girilenilkbakiye, yillikKazancYuzdesi, yillar);
-
-            // Karşılaştırma metni oluştur
-            let karsilastirmaMetni = "";
-            for (let sonuc of gunlukBilesikSonuclar) {
-                karsilastirmaMetni += `${sonuc.yil}. yıl: Düz kar ${sonuc.bilesikFaizsiz} USDT, Günlük reinvest ${sonuc.bilesikFaizli} USDT (${sonuc.fark} USDT fark). `;
-            }
-
             console.log();
             console.log(``);
             
@@ -1590,8 +1577,9 @@ function process_close_values(data) {
 <li>Şuanki grid dahil bakiye bölü ilk bakiye: ${parseFloat(kazancorani.toFixed(2))} X (yani toplam %${parseFloat((100 * (kazancorani - 1)).toFixed(2))} ekstra gelir gelmiş.)</li>
 <li>Bot başlarkenki coin fiyatı: ${data_first_close} USDT</li>
 <li>Coin son fiyatı: ${data[data.length - 1][4]} USDT</li>
-<li>Günlük kar yüzdesi: %${gunlukKazancYuzdesi}</li>
-<li>Her gün, gridden ekstra kazandığını tekrar aynı gride yatırsaydı (yani bileşik faiz yapsaydı): ${karsilastirmaMetni}</li>
+<li>Her ay, gridden ekstra kazandığını tekrar aynı gride yatırsaydı (yani bileşik faiz yapsaydı):
+<li>Bileşik faiz yapsaydı, sonuçta toplam ${sonuc} lirası olurdu.</li>
+<li>Bileşik faiz yapsaydı, anaparasını ${katlama} katına çıkarırdı.</li>
 </ul>
             `;
 
@@ -1608,30 +1596,6 @@ function process_close_values(data) {
         console.error(`process_close_values2 Hata: ${e}`);
         return null;
     }
-}
-
-function gunlukBilesikFaizHesapla(anapara, yillikKazancYuzdesi, yilSayilari) {
-    const gunlukKazancYuzdesi = yillikKazancYuzdesi / 365;
-    const sonuclar = [];
-    
-    for (let yil of yilSayilari) {
-        const gunSayisi = yil * 365;
-        
-        // Bileşik faizsiz (düz kar)
-        const bilesikFaizsiz = anapara + (anapara * (yillikKazancYuzdesi / 100) * yil);
-        
-        // Bileşik faizli (günlük reinvest)
-        const bilesikFaizli = anapara * Math.pow(1 + (gunlukKazancYuzdesi / 100), gunSayisi);
-        
-        sonuclar.push({
-            yil: yil,
-            bilesikFaizsiz: bilesikFaizsiz.toFixed(2),
-            bilesikFaizli: bilesikFaizli.toFixed(2),
-            fark: (bilesikFaizli - bilesikFaizsiz).toFixed(2)
-        });
-    }
-    
-    return sonuclar;
 }
 
 function bilesikFaizHesapla(anapara, aylikKazancYuzdesi, aySayisi) {
