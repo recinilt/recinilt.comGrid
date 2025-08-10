@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aylık DOGEUSDT Analizi</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .max-ratio { background-color: #ffeb3b; font-weight: bold; }
+        .file-input { margin: 20px 0; }
+        .result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Aylık Kripto Para Open/High ve Open/Low Oranları</h1>
+    
+    <div class="file-input">
+        <input type="file" id="jsonFile" accept=".json">
+        <button onclick="analyzeData()">Analiz Et</button>
+    </div>
+    
+    <div id="result" class="result"></div>
+
+    <script>
+        function analyzeData() {
+            const fileInput = document.getElementById('jsonFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Lütfen JSON dosyası seçiniz!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    if (!jsonData.symbol || !jsonData.data || !Array.isArray(jsonData.data)) {
+                        alert('Geçersiz JSON formatı! Symbol ve data alanları gerekli.');
+                        return;
+                    }
+                    processData(jsonData);
+                } catch (error) {
+                    alert('JSON dosyası okunamadı: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function processData(jsonData) {
+            const data = jsonData.data;
+            const monthlyData = {};
+            
+            // Verileri aylık gruplara ayır
+            data.forEach(row => {
+                const date = new Date(row[0]);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = {
+                        open: row[1], // İlk gün open
+                        high: row[2],
+                        low: row[3]
+                    };
+                } else {
+                    // Ayın en yüksek ve en düşük değerlerini güncelle
+                    monthlyData[monthKey].high = Math.max(monthlyData[monthKey].high, row[2]);
+                    monthlyData[monthKey].low = Math.min(monthlyData[monthKey].low, row[3]);
+                }
+            });
+            
+            // Oranları hesapla ve tabloyu oluştur
+            const results = [];
+            let maxHighRatio = 0;
+            let maxLowRatio = 0;
+            
+            for (const [month, values] of Object.entries(monthlyData)) {
+                const openHighRatio = (values.high / values.open).toFixed(4);
+                const openLowRatio = (values.open / values.low).toFixed(4);
+                
+                maxHighRatio = Math.max(maxHighRatio, parseFloat(openHighRatio));
+                maxLowRatio = Math.max(maxLowRatio, parseFloat(openLowRatio));
+                
+                results.push({
+                    month,
+                    open: values.open.toFixed(5),
+                    high: values.high.toFixed(5),
+                    low: values.low.toFixed(5),
+                    openHighRatio,
+                    openLowRatio
+                });
+            }
+            
+            // Tabloyu HTML'e çevir
+            let html = `
+                <h2>Analiz Sonuçları - ${jsonData.symbol}</h2>
+                <p><strong>Sembol:</strong> ${jsonData.symbol}</p>
+                <p><strong>Tarih Aralığı:</strong> ${jsonData.startDate} - ${jsonData.endDate}</p>
+                <p><strong>Zaman Dilimi:</strong> ${jsonData.interval}</p>
+                <p><strong>En Büyük Open/High Oranı:</strong> ${maxHighRatio.toFixed(4)}</p>
+                <p><strong>En Büyük Open/Low Oranı:</strong> ${maxLowRatio.toFixed(4)}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ay</th>
+                            <th>Open</th>
+                            <th>High</th>
+                            <th>Low</th>
+                            <th>Open/High</th>
+                            <th>Open/Low</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(result => {
+                const highClass = parseFloat(result.openHighRatio) === maxHighRatio ? 'max-ratio' : '';
+                const lowClass = parseFloat(result.openLowRatio) === maxLowRatio ? 'max-ratio' : '';
+                
+                html += `
+                    <tr>
+                        <td>${result.month}</td>
+                        <td>${result.open}</td>
+                        <td>${result.high}</td>
+                        <td>${result.low}</td>
+                        <td class="${highClass}">${result.openHighRatio}</td>
+                        <td class="${lowClass}">${result.openLowRatio}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('result').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
