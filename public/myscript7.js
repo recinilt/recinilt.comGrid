@@ -228,6 +228,22 @@ function downloadBigData() {
                 downloadDate: new Date().toISOString()
             };
             
+            // Hafızaya da yükle
+            loadedJsonData = jsonData;
+            loadedDataInfo = {
+                symbol: finalSymbol,
+                interval: interval,
+                startDate: startDate,
+                endDate: endDate,
+                dataCount: data.length
+            };
+
+            // Dosya bilgilerini göster
+            showFileInfo();
+
+            // Form alanlarını güncelle
+            updateFormLimits();
+
             const jsonString = JSON.stringify(jsonData, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
