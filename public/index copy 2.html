@@ -284,18 +284,6 @@
                 <input type="date" id="end_date" name="end_date" required>
 
                 <button type="button" id="submit-button" onclick="hesaplabutton()">Hesapla</button>
-                <!-- Çoklu Grid Analizi Bölümü -->
-                <div id="multi-grid-section" style="margin-top: 30px; padding: 20px; background-color: #f0f8ff; border-radius: 8px; border: 2px solid #007bff;">
-                    <h3 style="color: #007bff; margin-top: 0;">Çoklu Grid Analizi</h3>
-                    <p>Farklı grid yüzdelerini karşılaştırarak optimum grid sayısını bulun.</p>
-                    
-                    <label for="multi-grid-params">Parametreler (Başlangıç-Bitiş-Parça Sayısı):</label>
-                    <input type="text" id="multi-grid-params" placeholder="1-16-5" required>
-                    <p style="font-size: 12px; color: #666;">Örnek: 1-16-5 (1'den 16'ya kadar 5 geometrik parçaya böl)</p>
-                    
-                    <button type="button" id="multi-submit-button" onclick="cokluHesaplaButton()">Çoklu Gönder</button>
-                    <div id="multi-loader" style="display: none;">Çoklu hesaplama yapılıyor...</div>
-                </div>
             </form>
             <div id="loader"></div>
         </section>

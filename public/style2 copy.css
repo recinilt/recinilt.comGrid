@@ -252,35 +252,3 @@ footer {
     margin-top: 0;
     color: #004085;
 }
-
-#multi-grid-section {
-    background-color: #f0f8ff !important;
-    border: 2px solid #007bff !important;
-}
-
-#multi-grid-section h3 {
-    color: #007bff !important;
-    margin-top: 0 !important;
-}
-
-#multi-submit-button {
-    background-color: #007bff !important;
-    border-color: #007bff !important;
-}
-
-#multi-submit-button:hover {
-    background-color: #0056b3 !important;
-    border-color: #0056b3 !important;
-}
-
-#multi-loader {
-    color: #007bff !important;
-    font-weight: bold !important;
-    margin-top: 10px !important;
-}
-
-.multi-result-item {
-    border: 2px solid #007bff !important;
-    border-radius: 8px !important;
-    margin: 20px 0 !important;
-}
