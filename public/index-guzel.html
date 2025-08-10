@@ -159,49 +159,6 @@
     </header>
     <main>
         <section id="backtest-form-section">
-            <section id="data-management-section">
-                <h2>Veri Yönetimi</h2>
-                <div class="data-controls">
-                    <div class="data-download">
-                        <h3>Büyük Veri İndirme</h3>
-                        <label for="download-symbol">Coin Çifti:</label>
-                        <input type="text" id="download-symbol" placeholder="ONEUSDT" required>
-                        
-                        <label for="download-interval">Zaman Dilimi:</label>
-                        <select id="download-interval">
-                            <option value="5m">5 Dakika</option>
-                            <option value="15m">15 Dakika</option>
-                            <option value="1h">1 Saat</option>
-                            <option value="4h">4 Saat</option>
-                            <option value="1d">1 Gün</option>
-                        </select>
-                        
-                        <label for="download-start-date">Başlangıç Tarihi:</label>
-                        <input type="date" id="download-start-date" required>
-                        
-                        <label for="download-end-date">Bitiş Tarihi:</label>
-                        <input type="date" id="download-end-date" required>
-                        
-                        <button type="button" id="download-data-btn">Büyük Veri İndir</button>
-                        <div id="download-loader" style="display: none;">İndiriliyor...</div>
-                    </div>
-                    
-                    <div class="data-upload">
-                        <h3>JSON Veri Yükleme</h3>
-                        <input type="file" id="json-file-input" accept=".json" />
-                        <button type="button" id="upload-json-btn">JSON Dosyası Yükle</button>
-                        <div id="upload-status"></div>
-                        
-                        <div id="file-info" style="display: none;">
-                            <h4>Yüklenen Dosya Bilgileri:</h4>
-                            <p><strong>Sembol:</strong> <span id="file-symbol"></span></p>
-                            <p><strong>Zaman Dilimi:</strong> <span id="file-interval"></span></p>
-                            <p><strong>Tarih Aralığı:</strong> <span id="file-date-range"></span></p>
-                            <p><strong>Veri Sayısı:</strong> <span id="file-data-count"></span> satır</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
             <form id="gridbot-form">
                 <p>Bu araçla, seçtiğin tarih aralığında bir spot grid bot kullansaydın ne kadar kazanacağını görebilirsin. Girdiğin değerlerin doğru formatta olmasına dikkat et lütfen.</p>
                 <p class="uyari">Veri işleme süresi, seçilen tarih aralığına bağlı olarak değişebilir. Lütfen işlemin tamamlanmasını bekleyiniz.</p>

@@ -3,18 +3,6 @@
 //Bir lahmacun ayran ısmarlamak isterseniz, BSC BNB Smart Chain (BEP20) USDT adresim:
 //0x9a9b5b0eccebd2834f77f764364a14bbfc837dc0
 
-
-// Veri yönetimi için global değişkenler
-let loadedJsonData = null;
-let loadedDataInfo = {
-    symbol: null,
-    interval: null,
-    startDate: null,
-    endDate: null,
-    dataCount: 0
-};
-
-
 function sifirla() {
     levels = [];
     geometric_percentage = [];
@@ -88,12 +76,6 @@ function hesaplabutton() {
     const end_date = document.getElementById("end_date");
     const loader = document.getElementById('loader');
     
-    // JSON dosyası yüklendi mi kontrolü
-    if (!loadedJsonData) {
-        alert("Önce 'Veri Yönetimi' bölümünden JSON dosyası yüklemeniz veya büyük veri indirmeniz gerekmektedir!");
-        return;
-    }
-
     if (symbol.value.trim() === "" ||
         division_type.value.trim()==="" ||
         start.value.trim() === "" ||
@@ -185,196 +167,6 @@ function hesaplabutton() {
 
 
 }
-
-
-
-function downloadBigData() {
-    const symbol = document.getElementById('download-symbol').value.toUpperCase().trim();
-    const interval = document.getElementById('download-interval').value;
-    const startDate = document.getElementById('download-start-date').value;
-    const endDate = document.getElementById('download-end-date').value;
-    const loader = document.getElementById('download-loader');
-    const btn = document.getElementById('download-data-btn');
-    
-    // Validasyon
-    if (!symbol || !startDate || !endDate) {
-        alert('Lütfen tüm alanları doldurunuz.');
-        return;
-    }
-    
-    if (new Date(startDate) >= new Date(endDate)) {
-        alert('Bitiş tarihi başlangıç tarihinden sonra olmalıdır.');
-        return;
-    }
-    
-    loader.style.display = 'block';
-    btn.disabled = true;
-    btn.textContent = 'İndiriliyor...';
-    
-    try {
-        // Veriyi çek
-        const finalSymbol = symbol.includes('USDT') ? symbol : symbol + 'USDT';
-        const data = collect_data(finalSymbol, interval, startDate, endDate);
-        
-        if (data && data.length > 0) {
-            // JSON formatında indir
-            const jsonData = {
-                symbol: finalSymbol,
-                interval: interval,
-                startDate: startDate,
-                endDate: endDate,
-                dataCount: data.length,
-                data: data,
-                downloadDate: new Date().toISOString()
-            };
-            
-            const jsonString = JSON.stringify(jsonData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${finalSymbol}_${interval}_${startDate}_${endDate}_${data.length}rows.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert(`${data.length} satır veri başarıyla indirildi!`);
-        } else {
-            alert('Veri çekilemedi veya boş veri döndü.');
-        }
-    } catch (error) {
-        console.error('Veri indirme hatası:', error);
-        alert('Veri indirme sırasında hata oluştu: ' + error.message);
-    } finally {
-        loader.style.display = 'none';
-        btn.disabled = false;
-        btn.textContent = 'Büyük Veri İndir';
-    }
-}
-
-
-function uploadJsonData() {
-    const fileInput = document.getElementById('json-file-input');
-    const statusDiv = document.getElementById('upload-status');
-    const fileInfoDiv = document.getElementById('file-info');
-    
-    if (!fileInput.files || fileInput.files.length === 0) {
-        showUploadStatus('Lütfen bir JSON dosyası seçiniz.', 'error');
-        return;
-    }
-    
-    const file = fileInput.files[0];
-    
-    if (!file.name.toLowerCase().endsWith('.json')) {
-        showUploadStatus('Lütfen sadece .json uzantılı dosya seçiniz.', 'error');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const jsonData = JSON.parse(e.target.result);
-            
-            // JSON validasyonu
-            if (!validateJsonData(jsonData)) {
-                showUploadStatus('JSON dosyası geçersiz format. Gerekli alanlar eksik.', 'error');
-                return;
-            }
-            
-            // Global değişkenlere ata
-            loadedJsonData = jsonData;
-            loadedDataInfo = {
-                symbol: jsonData.symbol,
-                interval: jsonData.interval,
-                startDate: jsonData.startDate,
-                endDate: jsonData.endDate,
-                dataCount: jsonData.dataCount || jsonData.data.length
-            };
-            
-            // Dosya bilgilerini göster
-            showFileInfo();
-            showUploadStatus('JSON dosyası başarıyla yüklendi!', 'success');
-            
-            // Form alanlarını güncelle
-            updateFormLimits();
-            
-        } catch (error) {
-            console.error('JSON parse hatası:', error);
-            showUploadStatus('JSON dosyası okunamadı. Dosya bozuk olabilir.', 'error');
-        }
-    };
-    
-    reader.onerror = function() {
-        showUploadStatus('Dosya okuma hatası oluştu.', 'error');
-    };
-    
-    reader.readAsText(file);
-}
-
-function validateJsonData(jsonData) {
-    // Gerekli alanları kontrol et
-    const requiredFields = ['symbol', 'interval', 'startDate', 'endDate', 'data'];
-    
-    for (let field of requiredFields) {
-        if (!jsonData.hasOwnProperty(field) || jsonData[field] === null || jsonData[field] === undefined) {
-            console.error(`JSON validasyon hatası: ${field} alanı eksik`);
-            return false;
-        }
-    }
-    
-    // Data array kontrolü
-    if (!Array.isArray(jsonData.data) || jsonData.data.length === 0) {
-        console.error('JSON validasyon hatası: data alanı boş veya array değil');
-        return false;
-    }
-    
-    // İlk veri satırı format kontrolü
-    const firstRow = jsonData.data[0];
-    if (!Array.isArray(firstRow) || firstRow.length < 6) {
-        console.error('JSON validasyon hatası: Veri formatı hatalı');
-        return false;
-    }
-    
-    return true;
-}
-
-function showUploadStatus(message, type) {
-    const statusDiv = document.getElementById('upload-status');
-    statusDiv.textContent = message;
-    statusDiv.className = type === 'error' ? 'status-error' : 'status-success';
-    statusDiv.style.display = 'block';
-}
-
-function showFileInfo() {
-    const fileInfoDiv = document.getElementById('file-info');
-    document.getElementById('file-symbol').textContent = loadedDataInfo.symbol;
-    document.getElementById('file-interval').textContent = loadedDataInfo.interval;
-    document.getElementById('file-date-range').textContent = `${loadedDataInfo.startDate} - ${loadedDataInfo.endDate}`;
-    document.getElementById('file-data-count').textContent = loadedDataInfo.dataCount;
-    fileInfoDiv.style.display = 'block';
-}
-
-function updateFormLimits() {
-    if (!loadedDataInfo.symbol) return;
-    
-    // Tarih inputlarının min/max değerlerini güncelle
-    const startDateInput = document.getElementById('start_date');
-    const endDateInput = document.getElementById('end_date');
-    
-    startDateInput.min = loadedDataInfo.startDate;
-    startDateInput.max = loadedDataInfo.endDate;
-    endDateInput.min = loadedDataInfo.startDate;
-    endDateInput.max = loadedDataInfo.endDate;
-    
-    // Symbol inputunu güncelle
-    document.getElementById('symbol').value = loadedDataInfo.symbol;
-    document.getElementById('veriinterval').value = loadedDataInfo.interval;
-}
-
-
-
 /*
 function hesaplabutton() {
     const resultsContainer = document.getElementById('results');
@@ -470,26 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-    // Veri yönetimi butonları
-    document.getElementById('download-data-btn').addEventListener('click', downloadBigData);
-    document.getElementById('upload-json-btn').addEventListener('click', uploadJsonData);
-
-    // Tarih inputları için veri yönetimi kontrolleri
-    document.getElementById('download-start-date').addEventListener('change', function() {
-        const endInput = document.getElementById('download-end-date');
-        if (new Date(this.value) > new Date(endInput.value)) {
-            endInput.value = this.value;
-        }
-        endInput.min = this.value;
-    });
-
-    document.getElementById('download-end-date').addEventListener('change', function() {
-        const startInput = document.getElementById('download-start-date');
-        if (new Date(this.value) < new Date(startInput.value)) {
-            startInput.value = this.value;
-        }
-        startInput.max = this.value;
-    });
     
 });
 
@@ -936,39 +708,14 @@ function fetch_binance_klines(symbol, interval, start_time, end_time) {
 
 function vericekis(veriinterval, start_date, end_date) {
     /**
-     * JSON dosyasından veri çeken veya API'den çeken fonksiyon.
+     * Kullanıcıdan başlangıç ve bitiş tarihine göre veri çekme fonksiyonu.
+     *
+     * @param {string} veriinterval - Zaman dilimi (örn. "1m", "5m", "1h", "1d").
+     * @param {string} start_date - Başlangıç tarihi ("YYYY-MM-DD").
+     * @param {string} end_date - Bitiş tarihi ("YYYY-MM-DD").
+     * @return {Array} - Veriler [timestamp, open, high, low, close, volume] formatında.
      */
-    if (!loadedJsonData) {
-        throw new Error("Önce JSON dosyası yüklenmelidir veya büyük veri indirilmelidir!");
-    }
-    
-    // Yüklenen veri ile uyumluluk kontrolü
-    if (loadedDataInfo.interval !== veriinterval) {
-        throw new Error(`Zaman dilimi uyumsuz! Yüklenen: ${loadedDataInfo.interval}, İstenen: ${veriinterval}`);
-    }
-    
-    if (loadedDataInfo.symbol !== symbol) {
-        throw new Error(`Sembol uyumsuz! Yüklenen: ${loadedDataInfo.symbol}, İstenen: ${symbol}`);
-    }
-    
-    // Tarih aralığı kontrolü
-    const requestStart = new Date(start_date);
-    const requestEnd = new Date(end_date);
-    const loadedStart = new Date(loadedDataInfo.startDate);
-    const loadedEnd = new Date(loadedDataInfo.endDate);
-    
-    if (requestStart < loadedStart || requestEnd > loadedEnd) {
-        throw new Error(`Tarih aralığı uyumsuz! Yüklenen: ${loadedDataInfo.startDate} - ${loadedDataInfo.endDate}, İstenen: ${start_date} - ${end_date}`);
-    }
-    
-    // İstenen tarih aralığındaki veriyi filtrele
-    const filteredData = loadedJsonData.data.filter(row => {
-        const rowDate = new Date(row[0]);
-        return rowDate >= requestStart && rowDate <= requestEnd;
-    });
-    
-    console.log(`Filtrelenen veri sayısı: ${filteredData.length}`);
-    return filteredData;
+    return collect_data(symbol, veriinterval, start_date, end_date);
 }
 
 function fetch_binance_klines(symbol, interval, start_time, end_time) {
