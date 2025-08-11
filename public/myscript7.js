@@ -1813,7 +1813,7 @@ function process_close_values(data) {
             // Karşılaştırma metni oluştur
             let karsilastirmaMetni = "";
             for (let sonuc of gunlukBilesikSonuclar) {
-                karsilastirmaMetni += `${sonuc.yil}. yıl: Düz kar ${sonuc.bilesikFaizsiz} USDT, Günlük reinvest ${sonuc.bilesikFaizli} USDT (${sonuc.fark} USDT fark). `;
+                karsilastirmaMetni += `<span style="color: red;">${sonuc.yil}. yıl:</span> Düz kar ${sonuc.bilesikFaizsiz} USDT, Günlük reinvest ${sonuc.bilesikFaizli} USDT (${sonuc.fark} USDT fark). `;
             }
 
             console.log();
