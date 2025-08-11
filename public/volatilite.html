@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kripto Para Volatilite Analiz Aracı</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.15);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .results {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .result-value {
+            color: #667eea;
+            font-weight: 700;
+            flex: 1;
+            text-align: right;
+        }
+
+        .volatility-highlight {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.3em;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #667eea;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💹 Kripto Para Volatilite Analizi</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📊</div>
+            <div class="upload-text">JSON dosyasını buraya sürükleyin veya tıklayarak seçin</div>
+            <button class="btn">Dosya Seç</button>
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Dosya analiz ediliyor...</div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <h2 style="color: #333; margin-bottom: 20px; text-align: center;">📈 Analiz Sonuçları</h2>
+            
+            <div class="result-item">
+                <span class="result-label">Coin Çifti:</span>
+                <span class="result-value" id="symbol">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Zaman Dilimi:</span>
+                <span class="result-value" id="interval">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Başlangıç Tarihi:</span>
+                <span class="result-value" id="startDate">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Bitiş Tarihi:</span>
+                <span class="result-value" id="endDate">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Toplam Mum Sayısı:</span>
+                <span class="result-value" id="candleCount">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Ortalama Volatilite:</span>
+                <span class="result-value volatility-highlight" id="avgVolatility">-</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="minVolatility">-</div>
+                    <div class="stat-label">Minimum Volatilite</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="maxVolatility">-</div>
+                    <div class="stat-label">Maksimum Volatilite</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="medianVolatility">-</div>
+                    <div class="stat-label">Medyan Volatilite</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+
+        // Upload area click handler
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showError('Lütfen geçerli bir JSON dosyası seçin.');
+                return;
+            }
+
+            hideElements();
+            loading.style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    analyzeData(data);
+                } catch (err) {
+                    showError('Dosya okunamadı. Geçerli bir JSON dosyası olduğundan emin olun.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function analyzeData(data) {
+            try {
+                // Veri yapısını kontrol et
+                if (!data.data || !Array.isArray(data.data)) {
+                    throw new Error('Geçersiz veri formatı');
+                }
+
+                const candleData = data.data;
+                const volatilities = [];
+
+                // Her mum için volatilite hesapla: (high - low) / low
+                candleData.forEach((candle, index) => {
+                    if (candle.length >= 5) {
+                        const [timestamp, open, high, low, close, volume] = candle;
+                        const volatility = (high - low) / low;
+                        volatilities.push(volatility);
+                    }
+                });
+
+                if (volatilities.length === 0) {
+                    throw new Error('Hesaplanabilir veri bulunamadı');
+                }
+
+                // İstatistikleri hesapla
+                const avgVolatility = volatilities.reduce((sum, vol) => sum + vol, 0) / volatilities.length;
+                const minVolatility = Math.min(...volatilities);
+                const maxVolatility = Math.max(...volatilities);
+                
+                // Medyan hesapla
+                const sortedVolatilities = [...volatilities].sort((a, b) => a - b);
+                const median = sortedVolatilities.length % 2 === 0
+                    ? (sortedVolatilities[sortedVolatilities.length / 2 - 1] + sortedVolatilities[sortedVolatilities.length / 2]) / 2
+                    : sortedVolatilities[Math.floor(sortedVolatilities.length / 2)];
+
+                // Sonuçları göster
+                displayResults(data, volatilities.length, avgVolatility, minVolatility, maxVolatility, median);
+
+            } catch (err) {
+                showError(`Veri analiz edilirken hata oluştu: ${err.message}`);
+            }
+        }
+
+        function displayResults(data, candleCount, avgVolatility, minVolatility, maxVolatility, medianVolatility) {
+            // Tarihleri formatla
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('tr-TR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            };
+
+            // Zaman dilimini Türkçe'ye çevir
+            const intervalMap = {
+                '1m': '1 Dakika',
+                '5m': '5 Dakika',
+                '15m': '15 Dakika',
+                '30m': '30 Dakika',
+                '1h': '1 Saat',
+                '4h': '4 Saat',
+                '1d': '1 Gün',
+                '1w': '1 Hafta',
+                '1M': '1 Ay'
+            };
+
+            // Verileri güncelle
+            document.getElementById('symbol').textContent = data.symbol || 'N/A';
+            document.getElementById('interval').textContent = intervalMap[data.interval] || data.interval || 'N/A';
+            document.getElementById('startDate').textContent = data.startDate ? formatDate(data.startDate) : 'N/A';
+            document.getElementById('endDate').textContent = data.endDate ? formatDate(data.endDate) : 'N/A';
+            document.getElementById('candleCount').textContent = candleCount.toLocaleString('tr-TR');
+            document.getElementById('avgVolatility').textContent = `%${(avgVolatility * 100).toFixed(4)}`;
+            document.getElementById('minVolatility').textContent = `%${(minVolatility * 100).toFixed(4)}`;
+            document.getElementById('maxVolatility').textContent = `%${(maxVolatility * 100).toFixed(4)}`;
+            document.getElementById('medianVolatility').textContent = `%${(medianVolatility * 100).toFixed(4)}`;
+
+            hideElements();
+            results.style.display = 'block';
+        }
+
+        function showError(message) {
+            hideElements();
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function hideElements() {
+            loading.style.display = 'none';
+            error.style.display = 'none';
+            results.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
