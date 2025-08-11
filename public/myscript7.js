@@ -1834,11 +1834,11 @@ function process_close_values(data) {
 <li>Binance'ta açmak için gerekli min. bakiye: ${yavilkbakiyeiste.toFixed(2)} USDT</li>
 <li>Başlangıç bakiyesi: ${girilenilkbakiye} USDT</li>
 <li>Tamamlanmış işlem sayısı: ${satimsayisi}</li>
-<li>Günlük ortalama işlem sayısı: ${(satimsayisi/calculate_days_between(start_date, end_date)).toFixed(1)}
+<li>Günlük ortalama işlem sayısı: <span  style="color: red;">${(satimsayisi/calculate_days_between(start_date, end_date)).toFixed(1)}</span></li>
 <li>Gridden elde edilen realized USDT: ${parseFloat((gridprofit * girilenboluminbakiye).toFixed(2))} USDT</li>
 <li>Gridden yüzde kazanç: <span  style="color: green;">%${parseFloat(((gridprofit / yavilkbakiyeiste) * 100).toFixed(2))}</span></li>
 <li>Grid'den aylık yüzde kazanç: <span  style="color: blue;">%${aylikKazancYuzdesi}</span></li>
-<li>Grid'den yıllık yüzde kazanç: %${parseFloat((12 * 30 * ((gridprofit / yavilkbakiyeiste) * 100) / calculate_days_between(start_date, end_date)).toFixed(2))}</li>
+<li>Grid'den yıllık yüzde kazanç: <span  style="color: red;">%${parseFloat((12 * 30 * ((gridprofit / yavilkbakiyeiste) * 100) / calculate_days_between(start_date, end_date)).toFixed(2))}</span></li>
 <li>Şuanki gridden gelen hariç bakiye: ${parseFloat((yavsonbakiyeiste * girilenboluminbakiye).toFixed(2))} USDT</li>
 <li>Şuanki grid dahil bakiye: ${parseFloat(((yavsonbakiyeiste + gridprofit) * girilenboluminbakiye).toFixed(2))} USDT</li>
 <li>Şuanki grid dahil bakiye bölü ilk bakiye: ${parseFloat(kazancorani.toFixed(2))} X (yani toplam %${parseFloat((100 * (kazancorani - 1)).toFixed(2))} ekstra gelir gelmiş.)</li>
