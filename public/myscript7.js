@@ -392,6 +392,7 @@ function cokluSonuclariGoster(sonuclar, parametreler) {
                         <th style="border: 1px solid #dee2e6; padding: 8px;">Sıra</th>
                         <th style="border: 1px solid #dee2e6; padding: 8px;">Grid Arası %</th>
                         <th style="border: 1px solid #dee2e6; padding: 8px;">Grid Sayısı</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Günlük İşlem</th>
                         <th style="border: 1px solid #dee2e6; padding: 8px;">Kazanç %</th>
                     </tr>
                 </thead>
@@ -400,11 +401,13 @@ function cokluSonuclariGoster(sonuclar, parametreler) {
     
     siraliSonuclar.forEach((item, index) => {
         const kazancYuzdesi = kazancYuzdesiniCikar(item.sonuc);
+        const gunlukIslem = gunlukIslemSayisiniCikar(item.sonuc);
         cokluSonucHTML += `
             <tr>
                 <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;">${index + 1}</td>
                 <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;">${item.yuzde}</td>
                 <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;">${item.gridSayisi}</td>
+                <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;">${gunlukIslem.toFixed(1)}</td>
                 <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center; color: ${kazancYuzdesi > 0 ? 'green' : 'red'};">${kazancYuzdesi.toFixed(2)}%</td>
             </tr>
         `;
@@ -441,6 +444,21 @@ function kazancYuzdesiniCikar(sonucHTML) {
         return 0;
     }
 }
+
+function gunlukIslemSayisiniCikar(sonucHTML) {
+    try {
+        // "Günlük ortalama işlem sayısı" satırını bul
+        const match = sonucHTML.match(/Günlük ortalama işlem sayısı:.*?([0-9.]+)/);
+        if (match && match[1]) {
+            return parseFloat(match[1]);
+        }
+        return 0;
+    } catch (error) {
+        console.error('Günlük işlem sayısı çıkarılırken hata:', error);
+        return 0;
+    }
+}
+
 
 function downloadBigData() {
     const symbol = document.getElementById('download-symbol').value.toUpperCase().trim();
